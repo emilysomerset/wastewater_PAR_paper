@@ -6,4 +6,4 @@
 .Rhistory
 .RData
 .Ruserdata
-data/
+section_3/*.RData
