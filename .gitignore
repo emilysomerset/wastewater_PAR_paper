@@ -7,3 +7,5 @@
 .RData
 .Ruserdata
 section_3/*.RData
+section_3/cpp/*.o
+section_3/cpp/*.so
