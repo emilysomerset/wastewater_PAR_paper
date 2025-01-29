@@ -56,7 +56,7 @@ try(dyn.unload(dynlib("../section_3/cpp/model4")),silent = TRUE)
 dyn.load(dynlib("../section_3/cpp/model4"))
 ```
 
-## Data and data preparation
+## Load case data and prep data
 
 ``` r
 load("../section_3/data/work_d_toronto_2024_08_08.RData") # Public health ontario covid cases
@@ -114,4 +114,44 @@ pop <- work_d_toronto %>%
     ## `summarise()` has grouped output by 'earliest_week_end_date'. You can override
     ## using the `.groups` argument.
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+## Fit model
+
+``` r
+# This model is fit using the code in 2_1_popweighted_fixed_pred.R
+# We load the model that was fit using the full dataset (j = 126)
+
+load("../section_3/results_pred_popweighted_fixed/results_126.RData")
+```
+
+## Process the results
+
+``` r
+results <- process_results(data_foranalysis = data_foranalysis_full,
+                MI_models = MI_models)
+```
+
+## Plot the results
+
+### Ascertainment probability
+
+<img src="README_files/figure-gfm/unnamed-chunk-9-1.png" height="50%" />
+
+### Weekly new infection counts
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+### Cumulative infections
+
+    ## # A tibble: 2 × 5
+    ##   earliest_week_end_date z_cumsum_noadj_delta_med z_cumsum_noadj_delta_lwr
+    ##   <date>                                    <dbl>                    <dbl>
+    ## 1 2021-03-27                                 6.37                     5.09
+    ## 2 2021-04-03                                 6.97                     5.56
+    ## # ℹ 2 more variables: z_cumsum_noadj_delta_upr <dbl>,
+    ## #   number_of_cases_cumsum_delta <dbl>
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->

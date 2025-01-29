@@ -1,5 +1,4 @@
 process_results <- function(data_foranalysis, 
-                            samps,
                             MI_models){
 
 ncounts = length(data_foranalysis$tmbdat[[1]]$case_counts)
@@ -23,6 +22,7 @@ p_samps = exp(logit_p_samps1)/(1+  exp(logit_p_samps1))
 analysis_d <- data_foranalysis$analysis_d2 %>% 
   mutate(row_id = 1:nrow(.)) %>% 
   filter(row_id >= (index_start[1]-1)) %>% 
+  filter(!(is.na(ratio) & (row_id > (index_start[1])))) %>% 
   dplyr::select(-c("variable","value","exp_v","sum_v","shift_sum_v","ratio","wastewater_count_index"))
 
 analysis_d$p_med = as.numeric(apply(p_samps, MARGIN=1,median))
@@ -34,8 +34,9 @@ analysis_d$p_lwr = as.numeric(apply(p_samps, MARGIN=1,quantile, 0.025))
 
 #### Latent Z value
 Z_samps1 <- Reduce(cbind, Z_samps1)
-# Z_samps1 <- abs(Z_samps1)
+Z_samps1 <- abs(Z_samps1)
 Z_samps1_cumsum <- apply(Z_samps1, 2, cumsum)
+Z_samps1_cumsum_delta <- apply(Z_samps1_cumsum, 2, function(x){x-x[1]})
 
 analysis_d$z_med = as.numeric(apply(Z_samps1, MARGIN=1,median))
 analysis_d$z_upr = as.numeric(apply(Z_samps1, MARGIN=1,quantile,0.975))
@@ -49,13 +50,17 @@ analysis_d$y_med = as.numeric(apply(y_samps, MARGIN=1,median))
 analysis_d$y_upr = as.numeric(apply(y_samps, MARGIN=1,quantile,0.975))
 analysis_d$y_lwr = as.numeric(apply(y_samps, MARGIN=1,quantile,0.025))
 
-analysis_d$z_cumsum_noadj_med = as.numeric(apply(t(apply(Z_samps1_cumsum,MARGIN = 1, FUN = function(x) (x/pop*100))), MARGIN=1,median)) 
-analysis_d$z_cumsum_noadj_upr = as.numeric(apply(t(apply(Z_samps1_cumsum,MARGIN = 1, FUN = function(x) (x/pop*100))), MARGIN=1,quantile,0.975)) 
-analysis_d$z_cumsum_noadj_lwr = as.numeric(apply(t(apply(Z_samps1_cumsum,MARGIN = 1, FUN = function(x) (x/pop*100))), MARGIN=1,quantile,0.025)) 
+analysis_d$z_cumsum_noadj_med = as.numeric(apply(Z_samps1_cumsum, MARGIN=1,median)) 
+analysis_d$z_cumsum_noadj_upr = as.numeric(apply(Z_samps1_cumsum, MARGIN=1,quantile,0.975)) 
+analysis_d$z_cumsum_noadj_lwr = as.numeric(apply(Z_samps1_cumsum, MARGIN=1,quantile,0.025)) 
 
+analysis_d$z_cumsum_noadj_delta_med = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,median)) 
+analysis_d$z_cumsum_noadj_delta_upr = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,quantile,0.975)) 
+analysis_d$z_cumsum_noadj_delta_lwr = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,quantile,0.025)) 
 
 analysis_d <- analysis_d %>% 
-  mutate(number_of_cases_cumsum = (cumsum(y)+ analysis_d$Y0[1])/pop*100)
+  mutate(number_of_cases_cumsum = (cumsum(y)+ analysis_d$Y0[1]),
+         number_of_cases_cumsum_delta = number_of_cases_cumsum- number_of_cases_cumsum[1])
 
 return(analysis_d)
 

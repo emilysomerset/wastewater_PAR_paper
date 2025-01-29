@@ -44,7 +44,7 @@ try(dyn.unload(dynlib("../section_3/cpp/model4")),silent = TRUE)
 dyn.load(dynlib("../section_3/cpp/model4"))
 ```
 
-## Data and data preparation
+## Load case data and prep data
 
 ```{r, warning=FALSE, message=FALSE}
 load("../section_3/data/work_d_toronto_2024_08_08.RData") # Public health ontario covid cases
@@ -127,7 +127,9 @@ tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>%
                      breaks = scales::pretty_breaks(n=10))+
   scale_x_date(name = "Epidemiological week",
                      breaks = scales::pretty_breaks(n=10))
+```
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>% 
   ggplot(aes(earliest_week_end_date, y/lagged_case))+
   geom_line(aes(earliest_week_end_date,ratio_med), alpha = 0.5)+  
@@ -141,4 +143,77 @@ tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>%
                      breaks = scales::pretty_breaks(n=10))
 ```
 
+## Fit model
 
+```{r}
+# This model is fit using the code in 2_1_popweighted_fixed_pred.R
+# We load the model that was fit using the full dataset (j = 126)
+
+load("../section_3/results_pred_popweighted_fixed/results_126.RData")
+```
+
+## Process the results
+
+```{r, message=FALSE, warning=FALSE}
+results <- process_results(data_foranalysis = data_foranalysis_full,
+                MI_models = MI_models)
+```
+
+## Plot the results
+
+### Ascertainment probability
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, out.height="50%"}
+ggplot(results ,  aes(earliest_week_end_date, p_med))+
+  geom_line()+
+  geom_point()+
+  geom_ribbon(aes(ymin = p_lwr, ymax = p_upr), alpha = 0.3)+
+  theme_bw()+
+  xlab("Epidemiological week")+ 
+  scale_y_continuous(name = "Ascertainment probability", breaks = scales::pretty_breaks(n=10))+
+  geom_line(aes(earliest_week_end_date,total_number_of_tests/max(total_number_of_tests)))
+
+```
+
+### Weekly new infection counts
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(results, aes(earliest_week_end_date, z_med))+
+  geom_line()+
+  geom_line(aes(earliest_week_end_date, y), col = "red")+
+  geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
+  theme_bw()+ 
+  xlab("Epidemiological week")+ 
+  scale_y_continuous(name = "New infections", breaks = scales::pretty_breaks(n=10))
+```
+
+
+### Cumulative infections
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+results %>% 
+  filter(earliest_week_end_date<= ymd("2021-04-03") & earliest_week_end_date >= ymd("2021-03-27")) %>% 
+  dplyr::select(earliest_week_end_date, 
+                z_cumsum_noadj_delta_med,
+                z_cumsum_noadj_delta_lwr,
+                z_cumsum_noadj_delta_upr,
+                number_of_cases_cumsum_delta) %>% 
+  mutate(z_cumsum_noadj_delta_med=z_cumsum_noadj_delta_med/pop*100,
+         z_cumsum_noadj_delta_lwr=z_cumsum_noadj_delta_lwr/pop*100,
+         z_cumsum_noadj_delta_upr=z_cumsum_noadj_delta_upr/pop*100,
+         number_of_cases_cumsum_delta = number_of_cases_cumsum_delta/pop*100)
+
+ggplot(results, aes(earliest_week_end_date, z_cumsum_noadj_delta_med/pop*100))+
+  geom_line()+
+  geom_ribbon(aes(ymin = z_cumsum_noadj_delta_lwr/pop*100, ymax = z_cumsum_noadj_delta_upr/pop*100), alpha = 0.3)+
+  theme_bw()+ 
+  xlab("Epidemiological week")+ 
+  scale_y_continuous(name = "New infections", breaks = scales::pretty_breaks(n=10))+
+  geom_errorbar(data= data.frame(earliest_week_end_date=ymd("2021-03-31"),
+                                 lwr = 3.74,
+                                 upr = 7.27), 
+                aes(x=earliest_week_end_date,ymax =upr, ymin = lwr),inherit.aes = FALSE,size=0.5,width = 10)+
+     geom_point(data = data.frame(earliest_week_end_date=ymd("2021-03-31"),y= 5.38 ),
+             aes(earliest_week_end_date, y),size= 0.5)
+```
