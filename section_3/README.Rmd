@@ -32,13 +32,13 @@ library(ggplot2) # ggplot2_3.5.1
 ```
 
 You will need to source the following functions, provided in this folder. 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 source('../functions_general/prep_data_covid_with_fittedwastewater.R')
 source('../functions_general/process_results_epidemic.R')
 ```
 
 Compile and load the following C++ file
-```{r}
+```{r, warning=FALSE, message=FALSE}
 compile(file="../section_3/cpp/model4.cpp")
 try(dyn.unload(dynlib("../section_3/cpp/model4")),silent = TRUE)
 dyn.load(dynlib("../section_3/cpp/model4"))
@@ -46,14 +46,16 @@ dyn.load(dynlib("../section_3/cpp/model4"))
 
 ## Data and data preparation
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 load("../section_3/data/work_d_toronto_2024_08_08.RData") # Public health ontario covid cases
 load("../section_3/data/work_d_pho_testing_2024_10_07.RData") # Public health ontario testing
 load(file="../section_3/results_model_ON_phachist.RData") # from the wastewater model
 
 work_d_toronto <- work_d_toronto %>% 
-  left_join(work_d_testing %>% dplyr::select(week_end_date, total_number_of_tests) %>% 
-              mutate(week_end_date = ymd(week_end_date)), by = c("earliest_week_end_date"="week_end_date"))
+  left_join(work_d_testing %>% 
+              dplyr::select(week_end_date, total_number_of_tests) %>% 
+              mutate(week_end_date = ymd(week_end_date)), 
+            by = c("earliest_week_end_date"="week_end_date"))
 
 # bring in hospital data too
 
@@ -61,17 +63,22 @@ load("../section_3/data/work_d_pho_hosp_cases_2024_10_07.RData")
 load("../section_3/data/work_d_toronto_hosp_cases_2024_09_05.RData")
 
 work_d_toronto <- work_d_toronto %>% 
-  left_join(work_d_hosp2 %>% filter(outcome == "COVID-19 hospital admissions (up to January 20, 2024)") %>% 
+  left_join(work_d_hosp2 %>% 
+              filter(outcome == "COVID-19 hospital admissions (up to January 20, 2024)") %>% 
               dplyr::select(week_end_date, number) %>% 
               mutate(week_end_date = ymd(week_end_date)) %>% 
-              rename("admissions" = number), by = c("earliest_week_end_date"="week_end_date")) %>% 
-    left_join(work_d_hosp2 %>% filter(outcome == "COVID-19 deaths") %>% 
-              dplyr::select(week_end_date, number,population) %>% 
-              mutate(week_end_date = ymd(week_end_date)) %>% 
-              rename("deaths" = number), by = c("earliest_week_end_date"="week_end_date")) %>% 
+              rename("admissions" = number), 
+            by = c("earliest_week_end_date"="week_end_date")) %>% 
+    left_join(work_d_hosp2 %>% 
+                filter(outcome == "COVID-19 deaths") %>% 
+                dplyr::select(week_end_date, number,population) %>% 
+                mutate(week_end_date = ymd(week_end_date)) %>% 
+                rename("deaths" = number),
+            by = c("earliest_week_end_date"="week_end_date")) %>% 
       left_join(work_d_hosp %>% 
               dplyr::select(episode_week, hospitalized_cases) %>% 
-              mutate(episode_week = ymd(episode_week)), by = c("week_start_date"="episode_week"))
+              mutate(episode_week = ymd(episode_week)), 
+            by = c("week_start_date"="episode_week"))
 
 # These weights are from 
 # https://www.toronto.ca/wp-content/uploads/2023/10/8e9f-PublicHealthWastewaterSurveillanceTechNotes.pdf
@@ -108,14 +115,18 @@ tmp <- tmp %>%
             ratio_med = quantile(ratio,0.5))
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>% 
   ggplot(aes(earliest_week_end_date, y/lagged_case))+
   geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med), alpha = 0.5)+  
   geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.5)+  
   geom_point(col="red")+
   geom_line(col ="red")+
-  theme_bw()
+  theme_bw()+ 
+  scale_y_continuous(name = "Effective reproduction number",
+                     breaks = scales::pretty_breaks(n=10))+
+  scale_x_date(name = "Epidemiological week",
+                     breaks = scales::pretty_breaks(n=10))
 
 tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>% 
   ggplot(aes(earliest_week_end_date, y/lagged_case))+
@@ -123,7 +134,11 @@ tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>%
   geom_ribbon(aes(earliest_week_end_date,ymax = ratio_upr, ymin = ratio_lwr), alpha = 0.5)+  
   geom_point(col="red")+
   geom_line(col ="red")+
-  theme_bw()
+  theme_bw()+ 
+  scale_y_continuous(name = "Effective reproduction number",
+                     breaks = scales::pretty_breaks(n=10))+
+    scale_x_date(name = "Epidemiological week",
+                     breaks = scales::pretty_breaks(n=10))
 ```
 
 

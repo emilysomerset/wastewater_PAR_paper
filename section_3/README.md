@@ -49,13 +49,6 @@ Compile and load the following C++ file
 compile(file="../section_3/cpp/model4.cpp")
 ```
 
-    ## Warning in readLines(file): incomplete final line found on
-    ## '../section_3/cpp/model4.cpp'
-
-    ## using C++ compiler: 'Apple clang version 13.1.6 (clang-1316.0.21.2.5)'
-
-    ## using SDK: 'MacOSX12.3.sdk'
-
     ## [1] 0
 
 ``` r
@@ -71,8 +64,10 @@ load("../section_3/data/work_d_pho_testing_2024_10_07.RData") # Public health on
 load(file="../section_3/results_model_ON_phachist.RData") # from the wastewater model
 
 work_d_toronto <- work_d_toronto %>% 
-  left_join(work_d_testing %>% dplyr::select(week_end_date, total_number_of_tests) %>% 
-              mutate(week_end_date = ymd(week_end_date)), by = c("earliest_week_end_date"="week_end_date"))
+  left_join(work_d_testing %>% 
+              dplyr::select(week_end_date, total_number_of_tests) %>% 
+              mutate(week_end_date = ymd(week_end_date)), 
+            by = c("earliest_week_end_date"="week_end_date"))
 
 # bring in hospital data too
 
@@ -80,17 +75,22 @@ load("../section_3/data/work_d_pho_hosp_cases_2024_10_07.RData")
 load("../section_3/data/work_d_toronto_hosp_cases_2024_09_05.RData")
 
 work_d_toronto <- work_d_toronto %>% 
-  left_join(work_d_hosp2 %>% filter(outcome == "COVID-19 hospital admissions (up to January 20, 2024)") %>% 
+  left_join(work_d_hosp2 %>% 
+              filter(outcome == "COVID-19 hospital admissions (up to January 20, 2024)") %>% 
               dplyr::select(week_end_date, number) %>% 
               mutate(week_end_date = ymd(week_end_date)) %>% 
-              rename("admissions" = number), by = c("earliest_week_end_date"="week_end_date")) %>% 
-    left_join(work_d_hosp2 %>% filter(outcome == "COVID-19 deaths") %>% 
-              dplyr::select(week_end_date, number,population) %>% 
-              mutate(week_end_date = ymd(week_end_date)) %>% 
-              rename("deaths" = number), by = c("earliest_week_end_date"="week_end_date")) %>% 
+              rename("admissions" = number), 
+            by = c("earliest_week_end_date"="week_end_date")) %>% 
+    left_join(work_d_hosp2 %>% 
+                filter(outcome == "COVID-19 deaths") %>% 
+                dplyr::select(week_end_date, number,population) %>% 
+                mutate(week_end_date = ymd(week_end_date)) %>% 
+                rename("deaths" = number),
+            by = c("earliest_week_end_date"="week_end_date")) %>% 
       left_join(work_d_hosp %>% 
               dplyr::select(episode_week, hospitalized_cases) %>% 
-              mutate(episode_week = ymd(episode_week)), by = c("week_start_date"="episode_week"))
+              mutate(episode_week = ymd(episode_week)), 
+            by = c("week_start_date"="episode_week"))
 
 # These weights are from 
 # https://www.toronto.ca/wp-content/uploads/2023/10/8e9f-PublicHealthWastewaterSurveillanceTechNotes.pdf
@@ -106,27 +106,7 @@ data_foranalysis_full <- prep_data(case_data = work_d_toronto,
                                    AR=TRUE,
                                    weight_ratio = TRUE,
                                    weights_datadic = weights_datadic)
-```
 
-    ## `summarise()` has grouped output by 'variable'. You can override using the
-    ## `.groups` argument.
-    ## `summarise()` has grouped output by 'variable'. You can override using the
-    ## `.groups` argument.
-
-    ## Warning: Using an external vector in selections was deprecated in tidyselect 1.1.0.
-    ## ℹ Please use `all_of()` or `any_of()` instead.
-    ##   # Was:
-    ##   data %>% select(y_var)
-    ## 
-    ##   # Now:
-    ##   data %>% select(all_of(y_var))
-    ## 
-    ## See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-``` r
 pop <- work_d_toronto %>% 
   filter(earliest_week_end_date < mdy("09-30-2020")) %>% slice(1) %$% population[1]
 ```
@@ -134,17 +114,4 @@ pop <- work_d_toronto %>%
     ## `summarise()` has grouped output by 'earliest_week_end_date'. You can override
     ## using the `.groups` argument.
 
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_point()`).
-
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_line()`).
-
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-    ## Warning: Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_point()`).
-    ## Removed 1 row containing missing values or values outside the scale range
-    ## (`geom_line()`).
-
-![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
