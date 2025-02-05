@@ -164,6 +164,33 @@ data_foranalysis <- prep_data(outcome_column_name = "value",
                               polyOrder = 3,
                               pred_also = FALSE)
 
+# number of samples each site contributes per week on average
+data_foranalysis$df_full %>% 
+  mutate(ww = interaction(week(sample_date), year(sample_date))) %>% 
+  filter(!is.na(y)) %>% 
+  group_by(ww,site_id) %>% 
+  summarise(ll = length(y))%$% ll %>% mean()
+
+# how many samples each site contributes
+data_foranalysis$df_full %>% 
+  filter(!is.na(y)) %>% group_by(site_id) %>% 
+  summarise(ll = length(y))
+
+# number of days
+data_foranalysis$df_full %>% 
+  group_by(sample_date)
+
+# number of days with samples
+data_foranalysis$df_full %>% 
+  filter(!is.na(y)) %>% 
+  group_by(sample_date)
+
+# number of days without samples by day of the week
+data_foranalysis$df_full %>% 
+  filter(is.na(y)) %>% 
+  mutate(dow = wday(sample_date, label = TRUE)) %>% 
+  group_by(dow) %>% summarise(ll = length(dow))
+
 data_foranalysis$df_full$site_id %>% unique() #4 stations
 
 

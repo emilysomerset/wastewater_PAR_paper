@@ -69,7 +69,7 @@ for (j in seq(0,126,6)){
     tmbdat$lag = 0
     tmbdat$u1 = 1
     tmbdat$alpha1 = 0.5 #median
-    tmbdat$mean_z0 = tmbdat$obs_start_case
+    tmbdat$mean_z0 = tmbdat$obs_start_case/0.5
     tmbdat$sd_z0 = 500
     
     tmbparams <- list(

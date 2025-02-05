@@ -131,12 +131,35 @@ load("../section_3/results_pred_popweighted_fixed/results_126.RData")
 
 ``` r
 results <- process_results(data_foranalysis = data_foranalysis_full,
-                MI_models = MI_models)
+                MI_models = MI_models,
+                mean_adj = 2.57/100*pop, 
+                sd_adj = 0.47/100*pop)
 ```
 
 ## Plot the results
 
 ### Ascertainment probability
+
+    ## # A tibble: 186 × 36
+    ##    week_start_date     y public_health_unit    earliest_week_start_date
+    ##    <date>          <dbl> <chr>                 <date>                  
+    ##  1 2020-10-04       1762 Toronto Public Health 2020-10-04              
+    ##  2 2020-10-11       1881 Toronto Public Health 2020-10-11              
+    ##  3 2020-10-18       2213 Toronto Public Health 2020-10-18              
+    ##  4 2020-10-25       2243 Toronto Public Health 2020-10-25              
+    ##  5 2020-11-01       2562 Toronto Public Health 2020-11-01              
+    ##  6 2020-11-08       3281 Toronto Public Health 2020-11-08              
+    ##  7 2020-11-15       3189 Toronto Public Health 2020-11-15              
+    ##  8 2020-11-22       3460 Toronto Public Health 2020-11-22              
+    ##  9 2020-11-29       3846 Toronto Public Health 2020-11-29              
+    ## 10 2020-12-06       3739 Toronto Public Health 2020-12-06              
+    ## # ℹ 176 more rows
+    ## # ℹ 32 more variables: earliest_week_end_date <date>,
+    ## #   total_number_of_tests <dbl>, admissions <dbl>, deaths <dbl>,
+    ## #   population <dbl>, hospitalized_cases <dbl>, ratio_cases <dbl>,
+    ## #   index_start <int>, Y0 <dbl>, ratio_v_u <dbl>, ratio_v_u_fixed <dbl>,
+    ## #   row_id <int>, p_med <dbl>, p_upr <dbl>, p_lwr <dbl>, z_med <dbl>,
+    ## #   z_upr <dbl>, z_lwr <dbl>, y_med <dbl>, y_upr <dbl>, y_lwr <dbl>, …
 
 <img src="README_files/figure-gfm/unnamed-chunk-9-1.png" height="50%" />
 
@@ -149,8 +172,8 @@ results <- process_results(data_foranalysis = data_foranalysis_full,
     ## # A tibble: 2 × 5
     ##   earliest_week_end_date z_cumsum_noadj_delta_med z_cumsum_noadj_delta_lwr
     ##   <date>                                    <dbl>                    <dbl>
-    ## 1 2021-03-27                                 6.37                     5.09
-    ## 2 2021-04-03                                 6.97                     5.56
+    ## 1 2021-03-27                                 6.85                     5.42
+    ## 2 2021-04-03                                 7.48                     5.92
     ## # ℹ 2 more variables: z_cumsum_noadj_delta_upr <dbl>,
     ## #   number_of_cases_cumsum_delta <dbl>
 

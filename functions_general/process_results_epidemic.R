@@ -1,5 +1,8 @@
 process_results <- function(data_foranalysis, 
-                            MI_models){
+                            MI_models,
+                            adj = TRUE, 
+                            mean_adj = NULL, 
+                            sd_adj = NULL){
 
 ncounts = length(data_foranalysis$tmbdat[[1]]$case_counts)
 lag = 0
@@ -57,6 +60,12 @@ analysis_d$z_cumsum_noadj_lwr = as.numeric(apply(Z_samps1_cumsum, MARGIN=1,quant
 analysis_d$z_cumsum_noadj_delta_med = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,median)) 
 analysis_d$z_cumsum_noadj_delta_upr = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,quantile,0.975)) 
 analysis_d$z_cumsum_noadj_delta_lwr = as.numeric(apply(Z_samps1_cumsum_delta, MARGIN=1,quantile,0.025)) 
+
+if (adj == TRUE){
+phase = rnorm(lensim, mean = mean_adj, sd = sd_adj)
+analysis_d$z_cumsum_med = as.numeric(apply((Z_samps1_cumsum + phase), MARGIN=1,median)) 
+analysis_d$z_cumsum_upr = as.numeric(apply((Z_samps1_cumsum + phase), MARGIN=1,quantile,0.975)) 
+analysis_d$z_cumsum_lwr = as.numeric(apply((Z_samps1_cumsum + phase), MARGIN=1,quantile,0.025)) }
 
 analysis_d <- analysis_d %>% 
   mutate(number_of_cases_cumsum = (cumsum(y)+ analysis_d$Y0[1]),
