@@ -92,10 +92,18 @@ tmp <- tmp %>%
             ratio_med = quantile(ratio,0.5))
 
 
+tmp <- tmp %>%ungroup() %>%  
+  mutate(lagged_case = lag(y)) %>% 
+  mutate(ratio_crude = y/lagged_case)
+
 
 ### 
-gg1 = tmp %>%ungroup() %>%  mutate(lagged_case = lag(y)) %>% 
-  ggplot(aes(earliest_week_end_date, y/lagged_case))+
+which(tmp$ratio_v_u_fixed_med==(tmp$ratio_v_u_fixed_med %>% max()))
+which(tmp$ratio_crude==(tmp$ratio_crude %>% max(na.rm = TRUE)))
+tmp[63,]
+
+gg1 = tmp %>% 
+  ggplot(aes(earliest_week_end_date, ratio_crude))+
   geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.3)+  
   geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med))+  
   # geom_point(col="red")+
@@ -115,6 +123,9 @@ results <- process_results(data_foranalysis = data_foranalysis_full,
                            adj = TRUE, 
                            mean_adj = 2.57/100*pop, 
                            sd_adj = 0.47/100*pop)
+
+results %>% 
+  filter(earliest_week_end_date %in% c(ymd("2021-12-25"),ymd("2021-12-25")-days(7), ymd("2021-12-25")+days(7)))
 
 ### Weekly new infections 
 gg2 = ggplot(results, aes(earliest_week_end_date, z_med))+
@@ -211,20 +222,23 @@ rectangles <- data.frame(
 )
 
 dd = scales::pretty_breaks(n=10)
+round_custom <- function(x) {
+  round(x, -floor(log10(x)) * (x >= 100)) + (x < 100) * (round(x, -1) - x)
+}
 gg2 = results_pred %>%
   ggplot(aes(earliest_week_end_date, y))+
   theme_bw()+
   geom_rect(data=rectangles, aes(xmin=xmin, xmax=xmax, ymin=0, ymax=Inf), 
             fill='gray80', alpha=0.3,inherit.aes = FALSE)+
-  geom_point(size = 0.4)+
-  geom_point(aes(earliest_week_end_date, pred_y_med), show.legend = FALSE,shape = 2,size = 0.4)+
+  geom_point(size = 0.4,shape = 2)+
+  geom_point(aes(earliest_week_end_date, pred_y_med), show.legend = FALSE,size = 0.4)+
   geom_errorbar(aes(earliest_week_end_date, ymin = pred_y_95_lwr, ymax = pred_y_95_upr), 
                 show.legend = FALSE,
                 linewidth = 0.2)+
-  scale_y_continuous(name = expression(I[j]), 
+  scale_y_continuous(name = expression("Confirmed COVID-19 case counts"), 
                      trans="log10",
                      labels = function(x)format(x,digits=2,big.mark = ","),
-                     breaks = 10^(dd(log10(results_pred$pred_y_med),8)))+
+                     breaks = round_custom(10^(dd(log10(results_pred$pred_y_med),8))))+
   scale_x_date(breaks=scales::pretty_breaks(n=10), 
                name = "",
                date_labels ="%b",
