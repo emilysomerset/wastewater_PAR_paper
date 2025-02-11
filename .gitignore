@@ -11,3 +11,5 @@ section_3/cpp/*.o
 section_3/cpp/*.so
 section_3/results_pred_popweighted_fixed/*.RData
 section_3/README_cache
+section_4/cpp/*.o
+section_4/cpp/*.so
