@@ -13,3 +13,5 @@ section_3/results_pred_popweighted_fixed/*.RData
 section_3/README_cache
 section_4/cpp/*.o
 section_4/cpp/*.so
+section_4/*.RData
+section_4/README_cache

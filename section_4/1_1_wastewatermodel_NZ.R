@@ -258,3 +258,29 @@ marginals <- mdl1$marginals
 df_full =data_foranalysis$df_full
 
 save(file="./section_4/wastewater_model_newzealand_censored_comp_fullAR.RData", list = c("samps1","marginals","tmbdat","df_full"))
+
+
+load("./section_4/wastewater_model_newzealand_censored_comp_fullAR.RData")
+source("./functions_general/process_results_posteriorsamps.R")
+
+# You might not have enough vector memory space to run this.
+# If your Rstudio doesn't have enough memory
+# Step 1: Open terminal,
+# 
+# Step 2:
+#   
+#   cd ~
+#   touch .Renviron
+# open .Renviron
+# Step 3: Save the following as the first line of .Renviron:
+#   
+#   R_MAX_VSIZE=100Gb 
+# Step 4: Close RStudio and reopen
+results <- process_results(df_full =df_full,
+                           tmbdat = tmbdat, 
+                           samps1 = samps1, 
+                           polyOrder=3, 
+                           AR=TRUE)
+
+
+save(file="./section_4/results_model_NZ.RData", list = "results")
