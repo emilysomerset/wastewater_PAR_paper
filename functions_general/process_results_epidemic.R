@@ -2,7 +2,8 @@ process_results <- function(data_foranalysis,
                             MI_models,
                             adj = TRUE, 
                             mean_adj = NULL, 
-                            sd_adj = NULL){
+                            sd_adj = NULL,
+                            full_timeseries = FALSE){
 
 ncounts = length(data_foranalysis$tmbdat[[1]]$case_counts)
 lag = 0
@@ -24,9 +25,14 @@ p_samps = exp(logit_p_samps1)/(1+  exp(logit_p_samps1))
 
 analysis_d <- data_foranalysis$analysis_d2 %>% 
   mutate(row_id = 1:nrow(.)) %>% 
-  filter(row_id >= (index_start[1]-1)) %>% 
-  filter(!(is.na(ratio) & (row_id > (index_start[1])))) %>% 
-  dplyr::select(-c("variable","value","exp_v","sum_v","shift_sum_v","ratio","wastewater_count_index"))
+  filter(row_id >= (index_start[1]-1)) 
+
+if (full_timeseries ==TRUE){
+  analysis_d <- analysis_d %>% 
+    filter(!(is.na(ratio) & (row_id > (index_start[1]))))%>% 
+    dplyr::select(-c("variable","value","exp_v","sum_v","shift_sum_v","ratio","wastewater_count_index"))
+}else{  analysis_d <- analysis_d%>% 
+  dplyr::select(-c("variable","value","exp_v","sum_v","shift_sum_v","ratio","wastewater_count_index")) }
 
 analysis_d$p_med = as.numeric(apply(p_samps, MARGIN=1,median))
 analysis_d$p_upr = as.numeric(apply(p_samps, MARGIN=1,quantile,0.975))

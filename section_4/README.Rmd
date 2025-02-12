@@ -1,0 +1,157 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from the README.Rmd. Please edit that file -->
+
+# New Celand epidemic curve reconstruction
+This is the code to replicate the results in Section 4 of the manuscript. 
+
+Start by running the script **1_1_wastewatermodel_NZ.R** to fit the wastewater model. For more information on the wastewater model, please see https://doi.org/10.1093/jrsssc/qlae073 and https://github.com/emilysomerset/wastewater_paper_code. 
+
+For the remainder of the analysis, you will need the following libraries. The R version used for this analysis and the package versions are listed below.
+
+```{r setup, warning=FALSE, message=FALSE}
+# > sessionInfo()
+# R version 4.4.1 (2024-06-14)
+# Platform: aarch64-apple-darwin20
+# Running under: macOS Monterey 12.4
+
+# R version 4.4.2 (2024-10-31)
+# Platform: x86_64-pc-linux-gnu
+# Running under: Ubuntu 22.04.5 LTS
+
+library(dplyr) # dplyr_1.1.4
+library(TMB) # TMB_1.9.16
+library(magrittr) # magrittr_2.0.3
+library(reshape2) # reshape2_1.4.4
+library(gridExtra) # gridExtra_2.3
+library(cowplot) # cowplot_1.1.3
+library(lubridate) # lubridate_1.9.4
+library(ggplot2) # ggplot2_3.5.1
+library(zoo) #zoo_1.8-12
+```
+
+You will need to source the following function and data, provided in this folder. 
+```{r, warning=FALSE, message=FALSE}
+load("../section_4/data/cases_weekly_new_zealand.RData")
+load(file="../section_4/results_model_NZ.RData")
+source("../functions_general/prep_data_covid_with_fittedwastewater.R")
+source('../functions_general/process_results_epidemic.R')
+```
+
+Compile and load the following C++ file
+```{r, warning=FALSE, message=FALSE}
+compile(file="../section_4/cpp/model4.cpp")
+try(dyn.unload(dynlib("../section_4/cpp/model4")),silent = TRUE)
+dyn.load(dynlib("../section_4/cpp/model4"))
+```
+
+## Prep data
+
+```{r, warning=FALSE, message=FALSE, cache = TRUE}
+sites <- read_csv("../section_4/data/sites.csv")
+sites <- sites %>% 
+  dplyr::select(SampleLocation, Region, Population) %>% 
+  rename("site_id"= SampleLocation,
+         "weight"=Population)
+
+sites2 <- sites %>% 
+  group_by(Region) %>% 
+  mutate(region_weight = sum(weight)) %>% 
+  mutate(region_weight = ifelse(Region == "Auckland", region_weight-weight[which(site_id == "AU_Mangere")], region_weight)) %>% 
+  mutate(weight = ifelse(site_id == "AU_Mangere", 1.716*1000000- region_weight, weight))
+
+data_foranalysis <- prep_data(case_data = cases_epiweekly,
+                              y_var = "number_of_cases",
+                              results = results,
+                              AR = TRUE,
+                              weight_ratio = FALSE,
+                              weights_datadic = sites2,
+                              date_forfilter_strict_upr = ymd("2023-03-31"))
+```
+
+## Fit model
+
+```{r, eval = FALSE}
+MI_models <- list(NULL)
+
+set.seed(2917)
+ss <- sample(1:3000,500)
+for (i in 1:length(ss)){
+
+  tmbdat <- data_foranalysis$tmbdat[[ss[i]]]
+  tmbdat$case_counts <- c(tmbdat$obs_start_case, tmbdat$case_counts)
+  tmbdat$ratio <- c(1, tmbdat$ratio_v_u_fixed)
+  tmbdat$lag = 0
+  tmbdat$u1 = 1
+  tmbdat$alpha1 = 0.5 #median
+  tmbdat$mean_z0 = tmbdat$obs_start_case
+  tmbdat$sd_z0 = 500
+  
+  tmbparams <- list(
+    W = c(rep(0, length(tmbdat$case_counts)-tmbdat$lag), 
+          rep(400,length(tmbdat$case_counts)-tmbdat$lag)), # W = c(U,beta,Z); 
+    theta_p=1
+  )
+  
+  
+  ff <- TMB::MakeADFun(
+    data = tmbdat,
+    parameters = tmbparams,
+    random = "W",
+    DLL = "model4",
+    silent = TRUE
+  )
+  
+  aghq_k = 10
+  
+  mdl1 <- aghq::marginal_laplace_tmb(ff,k=aghq_k,startingvalue = c(1))
+  samps1 <- aghq::sample_marginal(mdl1, M = 3000) 
+  
+  MI_models[[i]] <- samps1
+  print(i)
+}
+
+save(file="../section_4/results_popweighted/results_NZ_v_u_fixed.RData", list = "MI_models")
+```
+
+## Process the results
+
+```{r, message=FALSE, warning=FALSE}
+load("../section_4/results_popweighted/results_NZ_v_u_fixed.RData")
+results <- process_results(data_foranalysis = data_foranalysis,
+                MI_models = MI_models,
+                full_timeseries = FALSE,
+                adj = FALSE)
+```
+
+## Plot the results
+
+### Ascertainment probability
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, out.height="50%"}
+
+results
+
+ggplot(results ,  aes(earliest_week_end_date, p_med))+
+  geom_line()+
+  # geom_point()+
+  geom_ribbon(aes(ymin = p_lwr, ymax = p_upr), alpha = 0.3)+
+  theme_bw()+
+  xlab("Epidemiological week")+ 
+  scale_y_continuous(name = "Ascertainment probability", breaks = scales::pretty_breaks(n=10))
+
+```
+
+### Weekly new infection counts
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(results, aes(earliest_week_end_date, z_med))+
+  geom_line()+
+  geom_line(aes(earliest_week_end_date, y), col = "red")+
+  geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
+  theme_bw()+ 
+  xlab("Epidemiological week")+ 
+  scale_y_continuous(name = "New infections", breaks = scales::pretty_breaks(n=10))
+```
