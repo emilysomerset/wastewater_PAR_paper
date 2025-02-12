@@ -5,23 +5,15 @@ rm(list=ls())
 # Running under: Ubuntu 22.04.5 LTS
 
 library(dplyr) # dplyr_1.1.4
-library(TMB) # TMB_1.9.16
-library(aghq) # aghq_0.4.1
 library(magrittr) # magrittr_2.0.3
 library(reshape2) # reshape2_1.4.4
 library(gridExtra) # gridExtra_2.3
 library(cowplot) # cowplot_1.1.3
 library(readr) #readr_2.1.5
 library(ggplot2) #ggplot2_3.5.1
-library(lubridate) #lubridate_1.9.4
 
-source('./functions_general/process_results_epidemic.R')
 
-load("./section_4/results_popweighted/results_NZ_v_u_fixed.RData")
-results <- process_results(data_foranalysis = data_foranalysis,
-                           MI_models = MI_models,
-                           full_timeseries = FALSE,
-                           adj = FALSE)
+load(file="./section_4/results_popweighted/results_processed_NZ_v_u_fixed.RData")
 
 
 ####
@@ -95,14 +87,14 @@ df_plt_weekly <- df_plt %>%
 
 ####
 
-gg4=ggplot( , aes(earliest_week_start_date, z_cumsum_med))+
+gg4=ggplot(results , aes(earliest_week_start_date, z_cumsum_noadj_med))+
   geom_line()+
   geom_line(aes(earliest_week_start_date, number_of_cases_cumsum), col = "red")+
-  geom_ribbon(aes(ymin = z_cumsum_lwr, ymax = z_cumsum_upr), alpha = 0.3)+
+  geom_ribbon(aes(ymin = z_cumsum_noadj_lwr, ymax = z_cumsum_noadj_upr), alpha = 0.3)+
   theme_bw()+
   scale_y_continuous(name = "Cumulative Infections", breaks = scales::pretty_breaks(n=10))+
   # # geom_hline(yintercept = 5.15*1000000)+ 
-  geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=1) +
+  # geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=1) +
   geom_line(data = df_plt %>% filter(variable == "(b) Cumulative infections"),
             aes(date, mean, group = alpha, col=alpha))+
   geom_ribbon(data = df_plt %>% filter(variable == "(b) Cumulative infections") ,
