@@ -21,7 +21,7 @@ source("./functions_general/process_results_original.R")
 ## Get site weights 
 sites <- read_csv("./section_4/data/sites.csv")
 sites <- sites %>% 
-  dplyr::select(SampleLocation, Region, Population) %>% 
+  dplyr::select(SampleLocation, Region, Population,DisplayName) %>% 
   rename("site_id"= SampleLocation,
          "weights"=Population)
 
@@ -134,6 +134,60 @@ rstudioapi::viewer(paste0("./section_4/plots/allsignals_NZ_wastewatermodel.pdf")
 
 
 #### Do the plot with common + station-specific
+to_plot <- sites2 %>% arrange(desc(weights)) %>% 
+  ungroup() %>% 
+  slice(1:15) 
+
+to_plot$DisplayName[4] <- "Mangere"
+  
+dd = scales::pretty_breaks(n=10)
+round_custom <- function(x) {
+  round(x, -floor(log10(x)) * (x >= 100)) + (x < 100) * (round(x, -1) - x)
+}
+
+gg1 <- results$df_full %>% 
+  filter(site_id %in% to_plot$site_id) %>% 
+  left_join(to_plot, by = "site_id") %>% 
+  mutate(DisplayName = factor(DisplayName, levels = to_plot$DisplayName)) %>% 
+  ggplot(aes(x = sample_date, y)) +
+  facet_wrap(~DisplayName, nrow = 3)+
+  geom_line(aes(y = exp_v_u_fixed),size=0.2) + 
+  geom_ribbon(aes(ymax = exp_v_u_fixed_upr, ymin = exp_v_u_fixed_lwr), alpha = 0.4, size = 0.2, fill = "black") +
+  geom_ribbon(aes(ymax =exp_v_fixed_upr, ymin = exp_v_fixed_lwr), alpha = 0.4, size = 0.2, fill = "red") +
+  theme_bw()+
+  geom_point(alpha =0.5, shape = 16, size = 0.2)+
+  geom_point(data=results$df_full %>%  
+               filter(site_id %in% to_plot$site_id) %>%  
+               left_join(to_plot, by = "site_id") %>% 
+               filter(censored_y == TRUE),col = "blue",alpha =0.5, shape = 16, size = 0.2)+
+  # scale_y_continuous(name = expression(paste(mu[i],"(t)")), 
+  #                    trans="log",
+  #                    labels = function(x)format(x,digits=2),
+  #                    breaks = c(0.14,1,8,50,400,3000))+ 
+  scale_y_continuous(name = expression(paste(mu[i],"(t)")), 
+                     trans="log",
+                     labels = function(x)format(x,digits=2,big.mark = ","),
+                     breaks = exp(dd(log(c(results$df_full$exp_v_u_fixed_lwr,results$df_full$exp_v_u_fixed_upr)),8)))+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -163))
+
+ggsave(filename = "./section_4/plots/time_trend_fixed_AR_data.pdf",
+       plot = gg1, 
+       device = "pdf",
+       width = 8.5, 
+       height = 5,
+       dpi = 300)
+
+rstudioapi::viewer(paste0("./section_4/plots/time_trend_fixed_AR_data.pdf"))
 
 ###############################################
 # Posteriors and prior plots
@@ -313,4 +367,3 @@ ggsave(filename = "./section_4/plots/hyperparameters_NZ_wastewatermodel.pdf",
 
 rstudioapi::viewer(paste0("./section_4/plots/hyperparameters_NZ_wastewatermodel.pdf"))
 
-~/Library/CloudStorage/OneDrive-UniversityofToronto/Research/wastewater_PAR_paper_code
