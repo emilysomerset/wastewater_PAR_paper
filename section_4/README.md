@@ -1,17 +1,21 @@
----
-output: github_document
----
 
 <!-- README.md is generated from the README.Rmd. Please edit that file -->
 
 # New Celand epidemic curve reconstruction
-This is the code to replicate the results in Section 4 of the manuscript. 
 
-Start by running the script **1_1_wastewatermodel_NZ.R** to fit the wastewater model. For more information on the wastewater model, please see https://doi.org/10.1093/jrsssc/qlae073 and https://github.com/emilysomerset/wastewater_paper_code. 
+This is the code to replicate the results in Section 4 of the
+manuscript.
 
-For the remainder of the analysis, you will need the following libraries. The R version used for this analysis and the package versions are listed below.
+Start by running the script **1_1_wastewatermodel_NZ.R** to fit the
+wastewater model. For more information on the wastewater model, please
+see <https://doi.org/10.1093/jrsssc/qlae073> and
+<https://github.com/emilysomerset/wastewater_paper_code>.
 
-```{r setup, warning=FALSE, message=FALSE}
+For the remainder of the analysis, you will need the following
+libraries. The R version used for this analysis and the package versions
+are listed below.
+
+``` r
 # > sessionInfo()
 # R version 4.4.1 (2024-06-14)
 # Platform: aarch64-apple-darwin20
@@ -33,8 +37,10 @@ library(zoo) #zoo_1.8-12
 library(readr) # readr_2.1.5
 ```
 
-You will need to source the following function and data, provided in this folder. 
-```{r, warning=FALSE, message=FALSE}
+You will need to source the following function and data, provided in
+this folder.
+
+``` r
 load("../section_4/data/cases_weekly_new_zealand.RData")
 load(file="../section_4/results_model_NZ.RData")
 source("../functions_general/prep_data_covid_with_fittedwastewater.R")
@@ -42,15 +48,21 @@ source('../functions_general/process_results_epidemic.R')
 ```
 
 Compile and load the following C++ file
-```{r, warning=FALSE, message=FALSE}
+
+``` r
 compile(file="../section_4/cpp/model4.cpp")
+```
+
+    ## [1] 0
+
+``` r
 try(dyn.unload(dynlib("../section_4/cpp/model4")),silent = TRUE)
 dyn.load(dynlib("../section_4/cpp/model4"))
 ```
 
 ## Prep data
 
-```{r, warning=FALSE, message=FALSE, cache = TRUE}
+``` r
 sites <- read_csv("../section_4/data/sites.csv")
 sites <- sites %>% 
   dplyr::select(SampleLocation, Region, Population) %>% 
@@ -74,7 +86,7 @@ data_foranalysis <- prep_data(case_data = cases_epiweekly,
 
 ## Fit model
 
-```{r, eval = FALSE}
+``` r
 MI_models <- list(NULL)
 
 set.seed(2917)
@@ -119,7 +131,7 @@ save(file="../section_4/results_popweighted/results_NZ_v_u_fixed.RData", list = 
 
 ## Process the results
 
-```{r, message=FALSE, warning=FALSE}
+``` r
 load("../section_4/results_popweighted/results_NZ_v_u_fixed.RData")
 results <- process_results(data_foranalysis = data_foranalysis,
                 MI_models = MI_models,
@@ -131,28 +143,29 @@ results <- process_results(data_foranalysis = data_foranalysis,
 
 ### Ascertainment probability
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, out.height="50%"}
+    ## # A tibble: 71 × 28
+    ##    earliest_week_start_date dow       y earliest_week_end_date dow2  ratio_cases
+    ##    <date>                   <ord> <dbl> <date>                 <ord>       <dbl>
+    ##  1 2021-11-14               Sun    1327 2021-11-20             Sat         1.11 
+    ##  2 2021-11-21               Sun    1269 2021-11-27             Sat         0.956
+    ##  3 2021-11-28               Sun     917 2021-12-04             Sat         0.723
+    ##  4 2021-12-05               Sun     684 2021-12-11             Sat         0.746
+    ##  5 2021-12-12               Sun     539 2021-12-18             Sat         0.788
+    ##  6 2021-12-19               Sun     410 2021-12-25             Sat         0.761
+    ##  7 2021-12-26               Sun     395 2022-01-01             Sat         0.963
+    ##  8 2022-01-02               Sun     407 2022-01-08             Sat         1.03 
+    ##  9 2022-01-09               Sun     428 2022-01-15             Sat         1.05 
+    ## 10 2022-01-16               Sun     465 2022-01-22             Sat         1.09 
+    ## # ℹ 61 more rows
+    ## # ℹ 22 more variables: index_start <int>, Y0 <dbl>, ratio_v_u <dbl>,
+    ## #   ratio_v_u_fixed <dbl>, row_id <int>, p_med <dbl>, p_upr <dbl>, p_lwr <dbl>,
+    ## #   z_med <dbl>, z_upr <dbl>, z_lwr <dbl>, y_med <dbl>, y_upr <dbl>,
+    ## #   y_lwr <dbl>, z_cumsum_noadj_med <dbl>, z_cumsum_noadj_upr <dbl>,
+    ## #   z_cumsum_noadj_lwr <dbl>, z_cumsum_noadj_delta_med <dbl>,
+    ## #   z_cumsum_noadj_delta_upr <dbl>, z_cumsum_noadj_delta_lwr <dbl>, …
 
-results
-
-ggplot(results ,  aes(earliest_week_end_date, p_med))+
-  geom_line()+
-  # geom_point()+
-  geom_ribbon(aes(ymin = p_lwr, ymax = p_upr), alpha = 0.3)+
-  theme_bw()+
-  xlab("Epidemiological week")+ 
-  scale_y_continuous(name = "Ascertainment probability", breaks = scales::pretty_breaks(n=10))
-
-```
+<img src="README_files/figure-gfm/unnamed-chunk-6-1.png" height="50%" />
 
 ### Weekly new infection counts
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-ggplot(results, aes(earliest_week_end_date, z_med))+
-  geom_line()+
-  geom_line(aes(earliest_week_end_date, y), col = "red")+
-  geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
-  theme_bw()+ 
-  xlab("Epidemiological week")+ 
-  scale_y_continuous(name = "New infections", breaks = scales::pretty_breaks(n=10))
-```
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
