@@ -55,6 +55,8 @@ save(file="./section_4/results_forplots_model_NZ.RData", list = "results")
 
 ##############################################
 load(file="./section_4/results_forplots_model_NZ.RData")
+results$station_ave_df  %>% arrange(-desc(sample_date)) %>% filter(ave_exp_v_u_fixed_deriv_lwr  >0) %>% dplyr::select(sample_date,ave_exp_v_u_fixed_deriv_lwr ) %>% slice(1)
+results$df_full %>% group_by(sample_date) %>% slice(1) %>% ungroup()%>% filter(exp_v_deriv_lwr >0) %>% dplyr::select(sample_date, exp_v, exp_v_deriv_lwr) %>% slice(1)
 
 gg1 <- results$df_full %>% 
   group_by(sample_date) %>% 
@@ -159,6 +161,7 @@ gg1 <- results$df_full %>%
   geom_point(data=results$df_full %>%  
                filter(site_id %in% to_plot$site_id) %>%  
                left_join(to_plot, by = "site_id") %>% 
+               mutate(DisplayName = factor(DisplayName, levels = to_plot$DisplayName)) %>% 
                filter(censored_y == TRUE),col = "blue",alpha =0.5, shape = 16, size = 0.2)+
   # scale_y_continuous(name = expression(paste(mu[i],"(t)")), 
   #                    trans="log",
@@ -215,7 +218,7 @@ smooth_var <- data.frame(SD = logpostsigma$transparam,
 
 orig <- log(2)
 c <- orig/tmbdat$u1
-smooth_var_prior <- data.frame(SD = seq(0, 3/400,0.0001)) %>% 
+smooth_var_prior <- data.frame(SD = seq(0,4/400,0.0001)) %>% 
   mutate(prior = priorfuncsigma(SD),
          prior2 = dexp(c*SD, -log(0.5)/orig))
 
@@ -228,7 +231,7 @@ posterior_sigma_s <- smooth_var_prior %>%
   geom_area(fill = "orange", alpha = 0.2) +
   theme_classic(base_size = 15) +
   ylab("Density") + 
-  scale_x_continuous(name = "",limits = c(0,2), breaks=scales::pretty_breaks(n=6) )+
+  scale_x_continuous(name = "",limits = c(0,4), breaks=scales::pretty_breaks(n=6) )+
   geom_line(data= smooth_var, aes(x = c*SD, y = density/c)) 
 # +geom_line(aes(x = c*SD, y = prior2)) 
 

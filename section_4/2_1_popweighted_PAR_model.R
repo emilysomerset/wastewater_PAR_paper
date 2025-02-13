@@ -96,6 +96,6 @@ results <- process_results(data_foranalysis = data_foranalysis,
                            full_timeseries = FALSE,
                            adj = FALSE)
 
-save(file="./section_4/results_popweighted/results_processed_NZ_v_u_fixed.RData", list = "results")
+save(file="./section_4/results_popweighted/results_processed_NZ_v_u_fixed.RData", list = c("results","data_foranalysis"))
 
 

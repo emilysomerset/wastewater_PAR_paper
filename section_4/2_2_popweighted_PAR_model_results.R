@@ -28,13 +28,11 @@ df1 = read.csv(paste0(dir, filename, "_alpha2e9", ".csv")) %>%  mutate(alpha = 2
 df2 = read.csv(paste0(dir, filename, ".csv")) %>%  mutate(alpha = 3e9)
 df3 = read.csv(paste0(dir, filename, "_alpha4e9", ".csv")) %>%  mutate(alpha = 4e9)
 
-# df_border = read.csv(paste0(dir,"data/borderWorkerInfections.csv")) %>%
-#   filter(!is.nan(dailyInfectionsPer100K)) %>%
-#   mutate(incidence=dailyInfectionsPer100K * 7 * 51.5,
-#          date = as.Date(substr(date, 1, 10), "%d/%m/%Y"),
-#          car = NaN) %>%
-#   arrange(date) %>%
-#   mutate(cumulative=cumsum(incidence))
+borderWorkerInfections <- read_csv(paste0(dir,"/borderWorkerInfections.csv"))
+borderWorkerInfections <- borderWorkerInfections %>% 
+  filter(!is.na(dailyInfectionsPer100K)) %>% 
+  mutate(cases = dailyInfectionsPer100K*(5.15*1000000/100000)*7) %>% 
+  mutate(date = date(dmy_hm(date)))
 
 # Print initial CARs (for interest) and then tidy
 CAR0_a = df1 %>% filter(variable=="CARt", t==141) %>% select(mean)
@@ -86,16 +84,217 @@ df_plt_weekly <- df_plt %>%
   mutate(earliest_week_end_date = earliest_week_start_date + 6) 
 
 ####
+### Effective reproduction numbers
+set.seed(2917)
+ss <- sample(1:3000,500)
+tmp = Reduce(rbind, lapply(as.list(ss),function(i){data_foranalysis$analysis_d[[i]]$version = i; data_foranalysis$analysis_d[[i]]}))
+tmp <- tmp %>% 
+  group_by(earliest_week_end_date,y) %>% 
+  summarise(ratio_v_u_fixed_lwr = quantile(ratio_v_u_fixed,0.025),
+            ratio_v_u_fixed_upr = quantile(ratio_v_u_fixed,0.975),
+            ratio_v_u_fixed_med = quantile(ratio_v_u_fixed,0.5),
+            ratio_lwr = quantile(ratio,0.025),
+            ratio_upr = quantile(ratio,0.975),
+            ratio_med = quantile(ratio,0.5))
 
-gg4=ggplot(results , aes(earliest_week_start_date, z_cumsum_noadj_med))+
+
+tmp <- tmp %>%ungroup() %>%  
+  mutate(lagged_case = lag(y)) %>% 
+  mutate(ratio_crude = y/lagged_case)
+
+
+### 
+
+gg1 = tmp %>% 
+  ggplot(aes(earliest_week_end_date, ratio_crude))+
+  geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.3)+  
+  geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med))+  
+  # geom_point(col="red")+
+  geom_line(col ="red", size = 0.5)+
+  theme_bw()+ 
+  scale_y_continuous(name = expression(R[j]),
+                     breaks = scales::pretty_breaks(n=10))+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -66))
+
+##
+
+gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
   geom_line()+
-  geom_line(aes(earliest_week_start_date, number_of_cases_cumsum), col = "red")+
+  geom_line(aes(earliest_week_end_date, number_of_cases_cumsum), linetype = "dashed")+
   geom_ribbon(aes(ymin = z_cumsum_noadj_lwr, ymax = z_cumsum_noadj_upr), alpha = 0.3)+
   theme_bw()+
-  scale_y_continuous(name = "Cumulative Infections", breaks = scales::pretty_breaks(n=10))+
+  scale_y_continuous(name = "Cumulative Infections", breaks = scales::pretty_breaks(n=8))+
   # # geom_hline(yintercept = 5.15*1000000)+ 
-  # geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=1) +
   geom_line(data = df_plt %>% filter(variable == "(b) Cumulative infections"),
             aes(date, mean, group = alpha, col=alpha))+
   geom_ribbon(data = df_plt %>% filter(variable == "(b) Cumulative infections") ,
-              aes(date, ymin = lower, ymax = upper, group = alpha, fill=alpha),inherit.aes = FALSE, alpha = 0.2)
+              aes(date, ymin = lower, ymax = upper, group = alpha, fill=alpha),inherit.aes = FALSE, alpha = 0.2)+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -66))+
+  geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=0.2) + 
+  labs(col = expression(alpha),
+       fill = expression(alpha))
+  
+
+
+
+## 
+gg3 = ggplot(results, aes(earliest_week_end_date, z_med))+
+  geom_line()+
+  # geom_point()+
+  geom_line(aes(earliest_week_end_date, y), linetype = "dashed")+
+  # geom_point(aes(earliest_week_end_date, y), col = "red")+
+  geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
+  theme_bw()+ 
+  scale_y_continuous(name = expression(I[j]), breaks = scales::pretty_breaks(n=8),
+                     labels = scales::comma)+
+  geom_line(data = df_plt_weekly,
+            aes(earliest_week_end_date, mean, group = alpha, col=alpha))+
+  # geom_point(data = df_plt_weekly,
+  #            aes(earliest_week_end_date, mean, group = alpha, col=alpha))+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -66))+ 
+  labs(col = expression(alpha))
+
+
+
+gg4=ggplot(results,  aes(earliest_week_end_date, p_med))+
+  geom_line()+
+  # geom_point()+
+  geom_ribbon(aes(ymin = p_lwr, ymax = p_upr), alpha = 0.3)+
+  theme_bw()+
+  scale_y_continuous(name = "Ascertainment probability", breaks = scales::pretty_breaks(n=10))+
+  geom_line(data = df_plt %>% filter(variable == "(c) Absolute case ascertainment rate"),
+            aes(date, mean, group = alpha, col=alpha))+
+  # geom_ribbon(data = df_plt %>% filter(variable == "(c) Absolute case ascertainment rate"),
+  #             aes(date, ymin = lower, ymax = upper, group = alpha, fill=alpha),inherit.aes = FALSE, alpha = 0.4)+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -66))+ 
+  labs(col = expression(alpha))
+
+fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=-6)), 
+                                   "a) Effective reproduction numbers"),
+                           add_sub(gg3, 
+                                   "b) Weekly new infections"),
+                           add_sub(gg4+ theme(axis.title.y=element_text(vjust=-2)), 
+                                   "c) Ascertainment probability"),
+                           add_sub(gg2+ theme(axis.title.y=element_text(vjust=0)) , 
+                                   "d) Cumulative infections"),
+                           align = "hv")
+
+ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ.pdf"),
+       plot = grid.arrange(fest1), 
+       device = "pdf",
+       width = 8.3, 
+       height = 8/3*2,
+       dpi = 300)
+
+rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ.pdf"))
+
+
+
+
+
+
+
+####
+
+df_plt%>% filter(variable == "(b) Cumulative infections") %>% 
+  dplyr::select(lower, upper, date,alpha) %>% 
+  filter(alpha == 2*10^9) %>% 
+  left_join(borderWorkerInfections, by = "date") %>% 
+  filter(!is.na(cases)) %>% 
+  mutate(cases = cumsum(cases)) %>% 
+  mutate(in_interval = cases >= lower & cases <= upper)%$% in_interval %>% table()
+
+df_plt%>% filter(variable == "(b) Cumulative infections") %>% 
+  dplyr::select(lower, upper, date,alpha) %>% 
+  filter(alpha == 3*10^9) %>% 
+  left_join(borderWorkerInfections, by = "date") %>% 
+  filter(!is.na(cases)) %>% 
+  mutate(cases = cumsum(cases)) %>% 
+  mutate(in_interval = cases >= lower & cases <= upper)%$% in_interval %>% table()
+
+df_plt%>% filter(variable == "(b) Cumulative infections") %>% 
+  dplyr::select(lower, upper, date,alpha) %>% 
+  filter(alpha == 4*10^9) %>% 
+  left_join(borderWorkerInfections, by = "date") %>% 
+  filter(!is.na(cases)) %>% 
+  mutate(cases = cumsum(cases)) %>% 
+  mutate(in_interval = cases >= lower & cases <= upper)%$% in_interval %>% table()
+
+
+data.frame(date = seq(min(results$earliest_week_end_date), max(results$earliest_week_end_date),1)) %>% 
+  left_join(results, by = c("date"="earliest_week_end_date")) %>% 
+  dplyr::select(date, z_cumsum_noadj_lwr,  z_cumsum_noadj_upr) %>% 
+  mutate_all(zoo::na.locf) %>% 
+  left_join(borderWorkerInfections, by = "date") %>% 
+  filter(!is.na(cases)) %>% 
+  mutate(cases = cumsum(cases)) %>% 
+  mutate(in_interval = cases >= z_cumsum_noadj_lwr & cases <= z_cumsum_noadj_upr)%$% in_interval %>% table()
+
+gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
+  # geom_line()+
+  # geom_line(aes(earliest_week_end_date, number_of_cases_cumsum), col = "red")+
+  # geom_ribbon(aes(ymin = z_cumsum_noadj_lwr, ymax = z_cumsum_noadj_upr), alpha = 0.3)+
+  theme_bw()+
+  scale_y_continuous(name = "Cumulative Infections", breaks = scales::pretty_breaks(n=8),trans = "log")+
+  # # geom_hline(yintercept = 5.15*1000000)+ 
+  # geom_line(data = df_plt %>% filter(variable == "(b) Cumulative infections"),
+  #           aes(date, mean, group = alpha, col=alpha))+
+  geom_ribbon(data = df_plt %>% filter(variable == "(b) Cumulative infections") %>% filter(alpha == 4*10^9),
+              aes(date, ymin = lower, ymax = upper, group = alpha, fill=alpha),inherit.aes = FALSE, alpha = 0.2)+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-02-01"),ymd("2022-07-24")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))+
+  theme(axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_text(vjust = -66))+
+  geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=0.2) 
