@@ -14,7 +14,7 @@ library(janitor)
 
 
 # raw_case <- read_csv("~/Wastewater/reproduction_number/data_leighton/raw/covid-case-counts-moh.csv")
-cases <- read_csv("~/Wastewater/reproduction_number/New_Zealand/data_leighton/cases.csv")
+cases <- read_csv("./section_4/data/cases.csv")
 
 # raw_case <- raw_case %>% clean_names()
 # 

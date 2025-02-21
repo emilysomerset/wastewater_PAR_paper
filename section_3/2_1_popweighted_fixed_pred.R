@@ -32,7 +32,8 @@ data_foranalysis_full <- prep_data(case_data = work_d_toronto,
                                    weight_ratio = TRUE,
                                    weights_datadic = weights_datadic)
 
-
+data_foranalysis_full$analysis_d2 %>% 
+  filter(earliest_week_end_date >= ymd("2020-10-10") & earliest_week_end_date<=ymd("2024-04-27"))%$% y %>% summary() %>% round()
 
 m1 = data_foranalysis_full$analysis_d[[1]] %>% 
   filter(earliest_week_end_date <= "2021-12-01") %$% earliest_week_end_date %>% max()

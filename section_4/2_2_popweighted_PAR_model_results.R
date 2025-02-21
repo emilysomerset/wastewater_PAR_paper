@@ -11,7 +11,10 @@ library(gridExtra) # gridExtra_2.3
 library(cowplot) # cowplot_1.1.3
 library(readr) #readr_2.1.5
 library(ggplot2) #ggplot2_3.5.1
+library(lubridate)
 
+load("./section_4/results_forplots_model_NZ.RData")
+results_ww <- results
 
 load(file="./section_4/results_popweighted/results_processed_NZ_v_u_fixed.RData")
 
@@ -68,6 +71,30 @@ df_plt = df %>%
                                                 "(c) Absolute case ascertainment rate",
                                                 "(d) Relative case ascertainment rate",
                                                 "(e) Instantaneous reproduction number")))
+
+ratio_raw = data.frame(date = seq(min(cases$date), max(cases$date),1)) %>% 
+  left_join(cases, by = "date") %>% filter(date>=ymd('2022-01-01')-days(7)) %>% 
+  mutate(ratio = c(NA, nCasesMovingAverage[2:nrow(.)]/nCasesMovingAverage[1:(nrow(.)-1)])) %>% 
+  dplyr::select(date, ratio)
+
+df_plt %>% filter(variable == "(e) Instantaneous reproduction number") %>% 
+  left_join(ratio_raw, by = "date") %>% 
+  ggplot(aes(date, mean, col = alpha, fill = alpha))+
+  geom_line()+ 
+  geom_ribbon(aes(ymin= lower, ymax = upper), alpha = 0.2)+ 
+  geom_line(data=results_ww$station_ave_df, aes(sample_date, inst_repro), inherit.aes = FALSE)+
+  geom_ribbon(data=results_ww$station_ave_df, aes(sample_date, ymin = inst_repro_lwr, ymax = inst_repro_upr), inherit.aes = FALSE, alpha = 0.5)+
+  geom_line(aes(date, ratio),inherit.aes = FALSE, col = "red")+ 
+  scale_x_date(breaks=scales::pretty_breaks(n=10), 
+               date_labels ="%b",
+               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+               name = "",
+               sec.axis = sec_axis(name = "",
+                                   trans = ~ .,
+                                   labels = function(x) {
+                                     years <- year(x)
+                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
+                                     years}))
 
 df_plt_weekly <- df_plt %>% 
   filter(variable == "(a) Infection incidence") %>% 
@@ -134,7 +161,8 @@ gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
   geom_line(aes(earliest_week_end_date, number_of_cases_cumsum), linetype = "dashed")+
   geom_ribbon(aes(ymin = z_cumsum_noadj_lwr, ymax = z_cumsum_noadj_upr), alpha = 0.3)+
   theme_bw()+
-  scale_y_continuous(name = "Cumulative Infections", breaks = scales::pretty_breaks(n=8))+
+  scale_y_continuous(name = expression(C[j]/1000000), breaks = scales::pretty_breaks(n=8),
+                     labels = function(x) x / 1000000)+
   # # geom_hline(yintercept = 5.15*1000000)+ 
   geom_line(data = df_plt %>% filter(variable == "(b) Cumulative infections"),
             aes(date, mean, group = alpha, col=alpha))+
@@ -151,10 +179,15 @@ gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
                                      years}))+
   theme(axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -66))+
+        axis.text.x.top = element_text(vjust = -66),
+        legend.position = c(0, 1),  # Places legend inside the top-right
+        legend.justification = c(0, 1),
+        legend.direction = "horizontal",
+        legend.background = element_blank(),
+        legend.key = element_blank())+
   geom_point(data=borderWorkerInfections,aes(date, cumsum(cases)),size=0.2) + 
-  labs(col = expression(alpha),
-       fill = expression(alpha))
+  labs(col = "",
+       fill = "")
   
 
 
@@ -167,8 +200,8 @@ gg3 = ggplot(results, aes(earliest_week_end_date, z_med))+
   # geom_point(aes(earliest_week_end_date, y), col = "red")+
   geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
   theme_bw()+ 
-  scale_y_continuous(name = expression(I[j]), breaks = scales::pretty_breaks(n=8),
-                     labels = scales::comma)+
+  scale_y_continuous(name = expression(I[j]/100000), breaks = scales::pretty_breaks(n=8),
+                     labels = function(x) x / 100000)+
   geom_line(data = df_plt_weekly,
             aes(earliest_week_end_date, mean, group = alpha, col=alpha))+
   # geom_point(data = df_plt_weekly,
@@ -184,8 +217,13 @@ gg3 = ggplot(results, aes(earliest_week_end_date, z_med))+
                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
                                      years}))+
   theme(axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -66))+ 
-  labs(col = expression(alpha))
+        axis.text.x.top = element_text(vjust = -66),
+        legend.position = c(1, 1),  # Places legend inside the top-right
+        legend.justification = c(1, 1),
+        legend.direction = "horizontal",
+        legend.background = element_blank(),
+        legend.key = element_blank())+ 
+  labs(col = '')
 
 
 
@@ -194,7 +232,8 @@ gg4=ggplot(results,  aes(earliest_week_end_date, p_med))+
   # geom_point()+
   geom_ribbon(aes(ymin = p_lwr, ymax = p_upr), alpha = 0.3)+
   theme_bw()+
-  scale_y_continuous(name = "Ascertainment probability", breaks = scales::pretty_breaks(n=10))+
+  scale_y_continuous(name = expression(pi[j]), 
+                     breaks = scales::pretty_breaks(n=10))+
   geom_line(data = df_plt %>% filter(variable == "(c) Absolute case ascertainment rate"),
             aes(date, mean, group = alpha, col=alpha))+
   # geom_ribbon(data = df_plt %>% filter(variable == "(c) Absolute case ascertainment rate"),
@@ -210,23 +249,28 @@ gg4=ggplot(results,  aes(earliest_week_end_date, p_med))+
                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
                                      years}))+
   theme(axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -66))+ 
-  labs(col = expression(alpha))
+        axis.text.x.top = element_text(vjust = -66),
+        legend.position = c(1, 1),  # Places legend inside the top-right
+        legend.justification = c(1, 1),
+        legend.direction = "horizontal",
+        legend.background = element_blank(),
+        legend.key = element_blank())+ 
+  labs(col = '')
 
-fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=-6)), 
-                                   "a) Effective reproduction numbers"),
+fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=0)), 
+                                   "a) Reproduction numbers"),
                            add_sub(gg3, 
-                                   "b) Weekly new infections"),
-                           add_sub(gg4+ theme(axis.title.y=element_text(vjust=-2)), 
+                                   "b) Infection counts"),
+                           add_sub(gg4+ theme(axis.title.y=element_text(vjust=0)), 
                                    "c) Ascertainment probability"),
                            add_sub(gg2+ theme(axis.title.y=element_text(vjust=0)) , 
                                    "d) Cumulative infections"),
-                           align = "hv")
+                           align = "v")
 
 ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ.pdf"),
        plot = grid.arrange(fest1), 
        device = "pdf",
-       width = 8.3, 
+       width = 8, 
        height = 8/3*2,
        dpi = 300)
 

@@ -305,6 +305,9 @@ if (1 %in% id_group){
               ave_exp_v_u_fixed_deriv = median(ave_exps_deriv),
               ave_exp_v_u_fixed_deriv_upr = quantile(ave_exps_deriv, 0.975),
               ave_exp_v_u_fixed_deriv_lwr = quantile(ave_exps_deriv, 0.025),
+              inst_repro = median(exp(ave_exps_deriv/ave_exps)),
+              inst_repro_upr = quantile(exp(ave_exps_deriv/ave_exps), 0.975),
+              inst_repro_lwr = quantile(exp(ave_exps_deriv/ave_exps), 0.025),
               post_prob_ave_exp_v_u_fixed_deriv = length(which(ave_exps_deriv>0))/length(ave_exps_deriv))}else{tmp = NULL}
   
   if (2 %in% id_group){

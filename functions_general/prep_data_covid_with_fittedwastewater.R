@@ -22,7 +22,7 @@ tmp <- results$v
 tmp <- tmp %>% 
   mutate(exp_v = exp(value))
 
-## cases
+## 
 tmp <-tmp %>% 
   group_by(variable) %>% 
   mutate(sum_v = c(rep(NA,6), zoo::rollapply(exp_v,7,sum))) %>% 
