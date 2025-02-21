@@ -113,7 +113,7 @@ gg1 = tmp %>%
                      breaks = scales::pretty_breaks(n=10))+
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
-  theme(axis.title.y = element_text(size = 16),
+  theme(axis.title.y = element_text(size = 14),
         axis.text.x.top = element_text(vjust = -68),
         axis.ticks.x.top = element_blank())
 
@@ -122,7 +122,8 @@ results <- process_results(data_foranalysis = data_foranalysis_full,
                            MI_models = MI_models, 
                            adj = TRUE, 
                            mean_adj = 2.57/100*pop, 
-                           sd_adj = 0.47/100*pop)
+                           sd_adj = 0.47/100*pop,
+                           full_timeseries = TRUE)
 
 results %>% 
   filter(earliest_week_end_date %in% c(ymd("2021-12-25"),ymd("2021-12-25")-days(7), ymd("2021-12-25")+days(7)))
@@ -133,11 +134,11 @@ gg2 = ggplot(results, aes(earliest_week_end_date, z_med))+
   geom_line()+
   geom_line(aes(earliest_week_end_date, y), col = "red")+
   theme_bw()+ 
-  scale_y_continuous(name = expression(I[j]), breaks = scales::pretty_breaks(n=8),
-                     labels = scales::comma)+
+  scale_y_continuous(name = expression(I[j]/10000), breaks = scales::pretty_breaks(n=8),
+                     labels = function(x) x / 10000)+
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
-  theme(axis.title.y = element_text(size = 16),
+  theme(axis.title.y = element_text(size = 12),
         axis.text.x.top = element_text(vjust = -68),
         axis.ticks.x.top = element_blank())
 
@@ -150,7 +151,7 @@ gg3 = ggplot(results ,  aes(earliest_week_end_date, p_med))+
   scale_y_continuous(name = expression(pi[j]), breaks = scales::pretty_breaks(n=6))+
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
-  theme(axis.title.y = element_text(size = 16),
+  theme(axis.title.y = element_text(size = 14),
         axis.text.x.top = element_text(vjust = -68),
         axis.ticks.x.top = element_blank())+
   geom_line(aes(earliest_week_end_date,total_number_of_tests/max(total_number_of_tests)),col = "red")
@@ -159,7 +160,7 @@ gg4 = ggplot(results %>% filter(earliest_week_end_date<"2021-12-01"), aes(earlie
   geom_ribbon(aes(ymin = z_cumsum_noadj_delta_lwr/pop*100, ymax = z_cumsum_noadj_delta_upr/pop*100), alpha = 0.3)+
   geom_line()+
   theme_bw()+ 
-  scale_y_continuous(name = "Cumulative Incidence (%)", breaks = scales::pretty_breaks(n=10))+
+  scale_y_continuous(name = expression(C[j]~"(%)"), breaks = scales::pretty_breaks(n=10))+
   geom_errorbar(data= data.frame(earliest_week_end_date=ymd("2021-03-31"),
                                  lwr = 3.74,
                                  upr = 7.27), 
@@ -168,16 +169,16 @@ gg4 = ggplot(results %>% filter(earliest_week_end_date<"2021-12-01"), aes(earlie
              aes(earliest_week_end_date, y),size= 0.5)+
   geom_line(aes(earliest_week_end_date, number_of_cases_cumsum_delta/pop*100), col = "red")+
   scale_x_date(breaks=scales::pretty_breaks(n=8), name = "")+
-  theme(axis.title.y = element_text(size = 10),
+  theme(axis.title.y = element_text(size = 12),
         axis.ticks.x.top = element_blank())
 
-fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=-3)), 
-                                              "a) Effective reproduction numbers"),
-                   add_sub(gg2, 
-                           "b) Weekly new infections"),
-                   add_sub(gg3+ theme(axis.title.y=element_text(vjust=-2)), 
-                                      "c) Weekly ascertainment probability"),
-                   add_sub(gg4+ theme(axis.title.y=element_text(vjust=-1)) , 
+fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=0)), 
+                                              "a) Reproduction numbers"),
+                   add_sub(gg2+theme(axis.title.y=element_text(vjust=-1)), 
+                           "b) Infection counts"),
+                   add_sub(gg3+ theme(axis.title.y=element_text(vjust=0)), 
+                                      "c) Ascertainment probability"),
+                   add_sub(gg4+ theme(axis.title.y=element_text(vjust=0)) , 
                            "d) Pre-Omicron cumulative incidence"),
                    align = "hv")
 
@@ -187,6 +188,8 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto.pdf"),
        width = 8.3, 
        height = 8/3*2,
        dpi = 300)
+
+rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto.pdf"))
 
 ### Validation plots
 results %>% 
