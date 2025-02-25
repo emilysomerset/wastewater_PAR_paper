@@ -156,16 +156,20 @@ gg3 = ggplot(results ,  aes(earliest_week_end_date, p_med))+
         axis.ticks.x.top = element_blank())+
   geom_line(aes(earliest_week_end_date,total_number_of_tests/max(total_number_of_tests)),col = "red")
 
+df2 = data.frame(earliest_week_end_date=ymd("2021-03-01"),
+           lwr = 3.74,
+           upr = 7.27)
+
 gg4 = ggplot(results %>% filter(earliest_week_end_date<"2021-12-01"), aes(earliest_week_end_date, z_cumsum_noadj_delta_med/pop*100))+
   geom_ribbon(aes(ymin = z_cumsum_noadj_delta_lwr/pop*100, ymax = z_cumsum_noadj_delta_upr/pop*100), alpha = 0.3)+
   geom_line()+
   theme_bw()+ 
   scale_y_continuous(name = expression(C[j]~"(%)"), breaks = scales::pretty_breaks(n=10))+
-  geom_errorbar(data= data.frame(earliest_week_end_date=ymd("2021-03-31"),
-                                 lwr = 3.74,
-                                 upr = 7.27), 
+  geom_errorbar(data= df2,
                 aes(x=earliest_week_end_date,ymax =upr, ymin = lwr),inherit.aes = FALSE,size=0.5,width = 10)+
-  geom_point(data = data.frame(earliest_week_end_date=ymd("2021-03-31"),y= 5.38 ),
+  geom_segment(data = df2, aes(x = ymd("2021-02-01"), xend = ymd("2021-03-31"), y = lwr)) +  
+  geom_segment(data = df2, aes(x = ymd("2021-02-01"), xend = ymd("2021-03-31"), y = upr)) +  
+  geom_point(data = data.frame(earliest_week_end_date=ymd("2021-03-01"),y= 5.38 ),
              aes(earliest_week_end_date, y),size= 0.5)+
   geom_line(aes(earliest_week_end_date, number_of_cases_cumsum_delta/pop*100), col = "red")+
   scale_x_date(breaks=scales::pretty_breaks(n=8), name = "")+
@@ -268,59 +272,3 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_validation_toronto.pd
 rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_validation_toronto.pdf"))
 
 
-### Prior and posterior
-
-rm(list=ls())
-
-library(fanetc)
-library(splines)
-library(cowplot)
-library(OSplines)
-library(TMB)
-library(aghq)
-library(bayesplot)
-library(lemon)
-library(openxlsx)
-
-# Load Model Object
-## Model object should have samps1, df, df_full, tmbdat and marginals
-load("./section_3/results_pred_popweighted_fixed/results_126.RData")
-
-### ascertainment probability SD
-
-theta_logprior <- function(theta,prior_alpha = 0.5,prior_u = 1) {
-  lambda <- -log(prior_alpha)/prior_u
-  log(lambda/2) - lambda * exp(-theta/2) - theta/2
-}
-priorfunc <- function(x) exp(theta_logprior(x))
-priorfuncsigma <- function(x) (2/x) * exp(theta_logprior(-2*log(x)))
-
-
-posterior_samps <- Reduce(c,lapply(MI_models, function(x)x$thetasamples[[1]]))
-dsigma = density(posterior_samps,adjust=2.5)
-plot(range)
-
-smooth_var <- data.frame(sigma = seq(0, 5, 0.01)) %>% 
-  mutate(prior = priorfuncsigma(sigma))
-
-
-posterior_sigma_pi = smooth_var %>% ggplot(aes(x = sigma, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
-  theme_classic(base_size = 15) +
-  geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = dsigma$x, y = dsigma$y)) +
-  ylab("Density") +
-  theme(legend.position = "none")+
-  scale_x_continuous(name = "",limits = c(0,5), breaks=scales::pretty_breaks(n=6) )
-
-
-library(gridExtra)
-gg <- grid.arrange(posterior_sigma_pi + ggtitle(expression(sigma[pi])), nrow = 1)
-
-ggsave(filename = "./section_3/plots/hyperparameters_epidemic.pdf",
-       plot = gg, 
-       device = "pdf",
-       width = 5, 
-       height = 4,
-       dpi = 300)
-
-rstudioapi::viewer(paste0("./section_3/plots/hyperparameters_epidemic.pdf"))

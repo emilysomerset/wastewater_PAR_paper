@@ -72,29 +72,51 @@ df_plt = df %>%
                                                 "(d) Relative case ascertainment rate",
                                                 "(e) Instantaneous reproduction number")))
 
-ratio_raw = data.frame(date = seq(min(cases$date), max(cases$date),1)) %>% 
-  left_join(cases, by = "date") %>% filter(date>=ymd('2022-01-01')-days(7)) %>% 
-  mutate(ratio = c(NA, nCasesMovingAverage[2:nrow(.)]/nCasesMovingAverage[1:(nrow(.)-1)])) %>% 
-  dplyr::select(date, ratio)
+# cases <- read_csv("./section_4/data/cases.csv")
+# ratio_raw = data.frame(date = seq(min(cases$date), max(cases$date),1)) %>% 
+#   left_join(cases, by = "date") %>% filter(date>=ymd('2022-01-01')-days(7)) %>% 
+#   mutate(ratio = c(NA, nCasesMovingAverage[2:nrow(.)]/nCasesMovingAverage[1:(nrow(.)-1)]),
+#          ratio2 = c(NA, nCases[2:nrow(.)]/nCases[1:(nrow(.)-1)])) %>% 
+#   dplyr::select(date, ratio,ratio2)
 
-df_plt %>% filter(variable == "(e) Instantaneous reproduction number") %>% 
-  left_join(ratio_raw, by = "date") %>% 
-  ggplot(aes(date, mean, col = alpha, fill = alpha))+
-  geom_line()+ 
-  geom_ribbon(aes(ymin= lower, ymax = upper), alpha = 0.2)+ 
-  geom_line(data=results_ww$station_ave_df, aes(sample_date, inst_repro), inherit.aes = FALSE)+
-  geom_ribbon(data=results_ww$station_ave_df, aes(sample_date, ymin = inst_repro_lwr, ymax = inst_repro_upr), inherit.aes = FALSE, alpha = 0.5)+
-  geom_line(aes(date, ratio),inherit.aes = FALSE, col = "red")+ 
-  scale_x_date(breaks=scales::pretty_breaks(n=10), 
-               date_labels ="%b",
-               limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
-               name = "",
-               sec.axis = sec_axis(name = "",
-                                   trans = ~ .,
-                                   labels = function(x) {
-                                     years <- year(x)
-                                     years[duplicated(years)] <- ""  # Remove duplicate year labels
-                                     years}))
+# df_plt %>% filter(variable == "(e) Instantaneous reproduction number") %>% 
+#   left_join(ratio_raw, by = "date") %>%
+#   group_by(alpha) %>% 
+#   mutate(cumprod = cumprod(mean)) %>% 
+#   ggplot(aes(date, mean, col = alpha, fill = alpha))+
+#   geom_line()+ 
+#   geom_ribbon(aes(ymin= lower, ymax = upper), alpha = 0.2)+ 
+#   geom_line(data=results_ww$station_ave_df, aes(sample_date, inst_repro), inherit.aes = FALSE)+
+#   geom_ribbon(data=results_ww$station_ave_df, aes(sample_date, ymin = inst_repro_lwr, ymax = inst_repro_upr), inherit.aes = FALSE, alpha = 0.5)+
+#   geom_line(aes(date, ratio),inherit.aes = FALSE, col = "red")+
+#   scale_x_date(breaks=scales::pretty_breaks(n=10), 
+#                date_labels ="%b",
+#                limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+#                name = "",
+#                sec.axis = sec_axis(name = "",
+#                                    trans = ~ .,
+#                                    labels = function(x) {
+#                                      years <- year(x)
+#                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
+#                                      years}))
+# 
+# df_plt %>% filter(variable == "(e) Instantaneous reproduction number") %>% 
+#   left_join(ratio_raw, by = "date") %>%
+#   group_by(alpha) %>% 
+#   mutate(cumprod = cumprod(mean)) %>% 
+#   ggplot(aes(date, cumprod, col = alpha, fill = alpha))+
+#   # geom_line()+
+#   geom_line(data=results_ww$station_ave_df %>% mutate(cumprod = cumprod(inst_repro)), aes(sample_date,cumprod), inherit.aes = FALSE)+
+#   scale_x_date(breaks=scales::pretty_breaks(n=10), 
+#                date_labels ="%b",
+#                limits = c(ymd("2022-01-01"),ymd("2023-03-25")),
+#                name = "",
+#                sec.axis = sec_axis(name = "",
+#                                    trans = ~ .,
+#                                    labels = function(x) {
+#                                      years <- year(x)
+#                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
+#                                      years}))
 
 df_plt_weekly <- df_plt %>% 
   filter(variable == "(a) Infection incidence") %>% 
@@ -102,13 +124,13 @@ df_plt_weekly <- df_plt %>%
          dow_num = wday(date)) %>% 
   group_by(alpha) %>% 
   mutate(starting_sun = date[which(dow=='Sun')[1]]) %>% 
-  filter(date >= starting_sun) %>% 
-  mutate(mean = c(zoo::rollapply(mean,7,sum,na.rm=TRUE),rep(NA,6))) %>%
+  mutate(ending_sat = date[max(which(dow=='Sat'))]) %>% 
+  filter(date >= starting_sun & date <= ending_sat) %>% 
+  mutate(mean = c(rep(NA,6),zoo::rollapply(mean,7,sum,na.rm=TRUE))) %>%
   filter(!is.na(mean)) %>% 
   filter(date %in% seq(min(date),max(date),7)) %>% 
-  dplyr::select(mean, t, date,alpha) %>% 
-  rename('earliest_week_start_date' = date) %>% 
-  mutate(earliest_week_end_date = earliest_week_start_date + 6) 
+  dplyr::select(mean, t, date,alpha,dow) %>% 
+  rename('earliest_week_end_date' = date) 
 
 ####
 ### Effective reproduction numbers
@@ -131,6 +153,8 @@ tmp <- tmp %>%ungroup() %>%
 
 
 ### 
+tmp %>% 
+  arrange(desc(ratio_v_u_fixed_med))
 
 gg1 = tmp %>% 
   ggplot(aes(earliest_week_end_date, ratio_crude))+
@@ -196,7 +220,7 @@ gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
 gg3 = ggplot(results, aes(earliest_week_end_date, z_med))+
   geom_line()+
   # geom_point()+
-  geom_line(aes(earliest_week_end_date, y), linetype = "dashed")+
+  geom_point(aes(earliest_week_end_date, y), size = 0.2)+
   # geom_point(aes(earliest_week_end_date, y), col = "red")+
   geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
   theme_bw()+ 

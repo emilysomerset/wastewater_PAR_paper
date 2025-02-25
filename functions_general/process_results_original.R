@@ -297,6 +297,8 @@ if (1 %in% id_group){
     mutate(denom_weights = sum(weights)) %>% 
     summarise(ave_exps = sum(exp(v_u_fixed)*weights/denom_weights),
               ave_exps_deriv = sum(v_u_fixed_deriv*exp(v_u_fixed)*weights/denom_weights)) %>% 
+    mutate(inst_repro = exp(ave_exps_deriv/ave_exps),
+           cum_inst_repro = cumprod(inst_repro)) %>% 
     ungroup() %>% 
     group_by(sample_date) %>% 
     summarise(ave_exp_v_u_fixed = median(ave_exps),
@@ -305,9 +307,12 @@ if (1 %in% id_group){
               ave_exp_v_u_fixed_deriv = median(ave_exps_deriv),
               ave_exp_v_u_fixed_deriv_upr = quantile(ave_exps_deriv, 0.975),
               ave_exp_v_u_fixed_deriv_lwr = quantile(ave_exps_deriv, 0.025),
-              inst_repro = median(exp(ave_exps_deriv/ave_exps)),
-              inst_repro_upr = quantile(exp(ave_exps_deriv/ave_exps), 0.975),
-              inst_repro_lwr = quantile(exp(ave_exps_deriv/ave_exps), 0.025),
+              inst_repro_med = median(inst_repro),
+              inst_repro_upr = quantile(inst_repro, 0.975),
+              inst_repro_lwr = quantile(inst_repro, 0.025),
+              prod_inst_repro_med = median(cum_inst_repro),
+              prod_inst_repro_upr = quantile(cum_inst_repro, 0.975),
+              prod_inst_repro_lwr = quantile(cum_inst_repro, 0.025),
               post_prob_ave_exp_v_u_fixed_deriv = length(which(ave_exps_deriv>0))/length(ave_exps_deriv))}else{tmp = NULL}
   
   if (2 %in% id_group){
