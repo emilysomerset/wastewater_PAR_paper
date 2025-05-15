@@ -22,7 +22,7 @@ source('./functions_general/prep_data_covid_with_fittedwastewater.R')
 source('./functions_general/process_results_epidemic.R')
 
 ## Full model results
-load("./section_3/results_pred_popweighted_fixed/results_126.RData")
+load("./section_3/results_pred_common/results_126.RData")
 
 
 ## Load and prep the data for plots
@@ -98,14 +98,14 @@ tmp <- tmp %>%ungroup() %>%
 
 
 ### 
-which(tmp$ratio_v_u_fixed_med==(tmp$ratio_v_u_fixed_med %>% max()))
+which(tmp$ratio_med==(tmp$ratio_med %>% max()))
 which(tmp$ratio_crude==(tmp$ratio_crude %>% max(na.rm = TRUE)))
-tmp[63,]
+tmp[62,]
 
 gg1 = tmp %>% 
   ggplot(aes(earliest_week_end_date, ratio_crude))+
-  geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.3)+  
-  geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med))+  
+  geom_ribbon(aes(earliest_week_end_date,ymax = ratio_upr, ymin = ratio_lwr), alpha = 0.3)+  
+  geom_line(aes(earliest_week_end_date,ratio_med))+  
   # geom_point(col="red")+
   geom_line(col ="red", size = 0.5)+
   theme_bw()+ 
@@ -127,6 +127,9 @@ results <- process_results(data_foranalysis = data_foranalysis_full,
 
 results %>% 
   filter(earliest_week_end_date %in% c(ymd("2021-12-25"),ymd("2021-12-25")-days(7), ymd("2021-12-25")+days(7)))
+
+results %>% 
+  filter(earliest_week_end_date %in% c(ymd("2021-12-18"),ymd("2021-12-18")-days(7), ymd("2021-12-18")+days(7)))
 
 ### Weekly new infections 
 dd = scales::pretty_breaks(n=10)
@@ -195,28 +198,51 @@ fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=-3
                            "d) Pre-Omicron cumulative incidence"),
                    align = "hv")
 
-ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto.pdf"),
+# gg2 = ggplot(results, aes(earliest_week_end_date, z_med))+
+#   geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
+#   geom_line()+
+#   geom_line(aes(earliest_week_end_date, y), col = "red")+
+#   theme_bw()+ 
+#   scale_y_continuous(name = expression(I[j]/10000), breaks = scales::pretty_breaks(n=8),
+#                      labels = function(x) x / 10000)+
+#   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
+#                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
+#   theme(axis.title.y = element_text(size = 12),
+#         axis.text.x.top = element_text(vjust = -68),
+#         axis.ticks.x.top = element_blank())
+
+fest1 = cowplot::plot_grid(add_sub(gg1+ theme(axis.title.y=element_text(vjust=0)), 
+                                   "a) Reproduction rates"),
+                           add_sub(gg2+theme(axis.title.y=element_text(vjust=-1)), 
+                                   "b) Infection counts"),
+                           add_sub(gg3+ theme(axis.title.y=element_text(vjust=0)), 
+                                   "c) Reporting probability"),
+                           add_sub(gg4+ theme(axis.title.y=element_text(vjust=-1)) , 
+                                   "d) Pre-Omicron cumulative incidence"),
+                           align = "hv")
+
+ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_common.pdf"),
        plot = grid.arrange(fest1), 
        device = "pdf",
        width = 8.3, 
        height = 8/3*2,
        dpi = 300)
 
-rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto.pdf"))
+rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto_common.pdf"))
 
 a = gg1+ theme(axis.title.y = element_blank(),
                axis.text.x.top = element_text(vjust = -78))
-ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_a.pdf"),
+ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_common_a.pdf"),
        plot = a, 
        device = "pdf",
        width = 8/2, 
        height = 8/3,
        dpi = 300)
-rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto_a.pdf"))
+rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto_common_a.pdf"))
 
 b = gg3+ theme(axis.title.y = element_blank(),
                axis.text.x.top = element_text(vjust = -78))
-ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_b.pdf"),
+ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_common_b.pdf"),
        plot = b, 
        device = "pdf",
        width = 8/2, 
@@ -225,7 +251,7 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_b.pdf"),
 
 c = gg2+ theme(axis.title.y = element_blank(),
                axis.text.x.top = element_text(vjust = -78))
-ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_c.pdf"),
+ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_common_c.pdf"),
        plot = c, 
        device = "pdf",
        width = 8/2, 
@@ -234,88 +260,9 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_c.pdf"),
 
 d = gg4+ theme(axis.title.y = element_blank(),
                axis.text.x.top = element_text(vjust = -78))
-ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_d.pdf"),
+ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_common_d.pdf"),
        plot = d, 
        device = "pdf",
        width = 8/2, 
        height = 8/3,
        dpi = 300)
-
-### Validation plots
-results %>% 
-  filter(earliest_week_end_date<= ymd("2021-04-03") & earliest_week_end_date >= ymd("2021-03-27")) %>% 
-  dplyr::select(earliest_week_end_date, 
-                z_cumsum_noadj_delta_med,
-                z_cumsum_noadj_delta_lwr,
-                z_cumsum_noadj_delta_upr,
-                number_of_cases_cumsum_delta) %>% 
-  mutate(z_cumsum_noadj_delta_med=z_cumsum_noadj_delta_med/pop*100,
-         z_cumsum_noadj_delta_lwr=z_cumsum_noadj_delta_lwr/pop*100,
-         z_cumsum_noadj_delta_upr=z_cumsum_noadj_delta_upr/pop*100,
-         number_of_cases_cumsum_delta = number_of_cases_cumsum_delta/pop*100)
-
-
-
-
-load("./section_3/results_pred_popweighted_fixed/results_pred.RData")
-rect_left = results_pred %>% 
-  group_by(model) %>% 
-  slice(c(1))%$% earliest_week_end_date
-
-rect_right = results_pred %>% 
-  group_by(model) %>% 
-  slice(c(5))%$% earliest_week_end_date
-
-
-rectangles <- data.frame(
-  xmin = rect_left,
-  xmax = rect_right,
-  ymin = -Inf,
-  ymax = Inf
-)
-
-dd = scales::pretty_breaks(n=10)
-round_custom <- function(x) {
-  round(x, -floor(log10(x)) * (x >= 100)) + (x < 100) * (round(x, -1) - x)
-}
-
-gg2 = results_pred %>%
-  ggplot(aes(earliest_week_end_date, y))+
-  theme_bw()+
-  geom_rect(data=rectangles, aes(xmin=xmin, xmax=xmax, ymin=0, ymax=Inf), 
-            fill='gray80', alpha=0.3,inherit.aes = FALSE)+
-  geom_point(aes(earliest_week_end_date, pred_y_med), show.legend = FALSE,size = 0.6)+
-  geom_errorbar(aes(earliest_week_end_date, ymin = pred_y_95_lwr, ymax = pred_y_95_upr), 
-                show.legend = FALSE,
-                linewidth = 0.2)+
-  geom_point(size = 1,shape = 17, col = "red", fill = "red")+
-  scale_y_continuous(name = expression("Confirmed COVID-19 case counts"), 
-                     trans="log10",
-                     labels = function(x)format(x,digits=2,big.mark = ","),
-                     breaks = round_custom(10^(dd(log10(results_pred$pred_y_med),8))))+
-  scale_x_date(breaks=scales::pretty_breaks(n=10), 
-               name = "",
-               date_labels ="%b",
-               sec.axis = sec_axis(name = "",
-                                   trans = ~ .,
-                                   labels = function(x) {
-                                   years <- year(x)
-                                   years[duplicated(years)] <- ""  # Remove duplicate year labels
-                                   years}),
-               expand = c(0.01, 0.01))+
-  theme(axis.title.y = element_text(size = 10),
-        axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -91),
-        panel.grid.minor.x = element_blank())
-
-
-ggsave(filename = paste0("./section_3/plots/epidemic_model_validation_toronto.pdf"),
-       plot =gg2, 
-       device = "pdf",
-       width = 7, 
-       height = 3,
-       dpi = 300)
-
-rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_validation_toronto.pdf"))
-
-

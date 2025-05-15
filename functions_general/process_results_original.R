@@ -195,6 +195,7 @@ process_results <- function(df_full, tmbdat, samps1, polyOrder,  id_group, id_gr
   v_u_fixed_deriv <-vderiv[,-1]+ u_deriv_samps1
   u_fixed <- u_samps1 + Xfstat_full%*%Xf_samps1
   v_fixed <- v[,-1] + Xfstat_full%*%Xf_samps1
+  v_fixed_deriv <- vderiv[,-1]
   
   ## Nominal AR2 + ospline+ fixed effects
   df_full$exp_v_u_fixed <- as.numeric(apply(exp(v_u_fixed), MARGIN=1,median))
@@ -269,6 +270,14 @@ process_results <- function(df_full, tmbdat, samps1, polyOrder,  id_group, id_gr
   df_full$exp_v_deriv_upr <- as.numeric(apply((exp(v[,-1]) * vderiv[,-1]), MARGIN=1,quantile, 0.975))
   df_full$exp_v_deriv_lwr<- as.numeric(apply((exp(v[,-1]) * vderiv[,-1]), MARGIN=1,quantile, 0.025))
   
+  df_full$inst_repro = as.numeric(apply(exp(vderiv[,-1]), MARGIN=1,median))
+  df_full$inst_repro_lwr = as.numeric(apply(exp(vderiv[,-1]), MARGIN=1,quantile, 0.025))
+  df_full$inst_repro_upr = as.numeric(apply(exp(vderiv[,-1]), MARGIN=1,quantile, 0.975))
+  
+  df_full$inst_repro_v_u = as.numeric(apply(exp(v_u_fixed_deriv), MARGIN=1,median))
+  df_full$inst_repro_v_u_lwr = as.numeric(apply(exp(v_u_fixed_deriv), MARGIN=1,quantile, 0.025))
+  df_full$inst_repro_v_u_upr = as.numeric(apply(exp(v_u_fixed_deriv), MARGIN=1,quantile, 0.975))
+  
 if ( (1 %in% id_group) | (2 %in% id_group) ){
   post_samps_df <- df_full %>% 
     dplyr::select('sample_date','site_id',id_group_name) %>% 
@@ -280,6 +289,16 @@ if ( (1 %in% id_group) | (2 %in% id_group) ){
     cbind(as.data.frame(v_u_fixed_deriv)) %>% 
     melt(id.vars = 1:(2+length(id_group_name)))
   
+  post_samps_df_v_fixed <- df_full %>% 
+    dplyr::select('sample_date','site_id',id_group_name) %>% 
+    cbind(as.data.frame(v_fixed)) %>% 
+    melt(id.vars = 1:(2+length(id_group_name)))
+  
+  post_samps_df_v_fixed_deriv <- df_full %>% 
+    dplyr::select('sample_date','site_id',id_group_name) %>% 
+    cbind(as.data.frame(v_fixed_deriv)) %>% 
+    melt(id.vars = 1:(2+length(id_group_name)))
+  
   post_samps_df_noint <- df_full %>% 
     dplyr::select('sample_date','site_id',id_group_name) %>% 
     cbind(as.data.frame(v_u)) %>% 
@@ -288,6 +307,8 @@ if ( (1 %in% id_group) | (2 %in% id_group) ){
   output_postsamps = post_samps_df %>% 
     rename("v_u_fixed" = value) %>% 
     cbind(post_samps_df_deriv%>% dplyr::select(value) %>% rename("v_u_fixed_deriv"= value) ) %>% 
+    cbind(post_samps_df_v_fixed%>% dplyr::select(value) %>% rename("v_fixed"= value) ) %>% 
+    cbind(post_samps_df_v_fixed_deriv%>% dplyr::select(value) %>% rename("v_fixed_deriv"= value) ) %>% 
     cbind(post_samps_df_noint %>% dplyr::select(value) %>% rename("v_u"= value) )}
   
 if (1 %in% id_group){
@@ -295,25 +316,32 @@ if (1 %in% id_group){
     left_join(weights_df, by = "site_id") %>% 
     group_by(variable, sample_date) %>% 
     mutate(denom_weights = sum(weights)) %>% 
-    summarise(ave_exps = sum(exp(v_u_fixed)*weights/denom_weights),
-              ave_exps_deriv = sum(v_u_fixed_deriv*exp(v_u_fixed)*weights/denom_weights)) %>% 
-    mutate(inst_repro = exp(ave_exps_deriv/ave_exps),
+    summarise(ave_exps_v_u_fixed = sum(exp(v_u_fixed)*weights/denom_weights),
+              ave_exps_v_u_fixed_deriv = sum(v_u_fixed_deriv*exp(v_u_fixed)*weights/denom_weights),
+              ave_exps_v_fixed = sum(exp(v_fixed)*weights/denom_weights),
+              ave_exps_v_fixed_deriv = sum(v_fixed_deriv*exp(v_fixed)*weights/denom_weights)) %>% 
+    mutate(inst_repro = exp(ave_exps_v_u_fixed_deriv/ave_exps_v_u_fixed),
            cum_inst_repro = cumprod(inst_repro)) %>% 
     ungroup() %>% 
     group_by(sample_date) %>% 
-    summarise(ave_exp_v_u_fixed = median(ave_exps),
-              ave_exp_v_u_fixed_upr = quantile(ave_exps, 0.975),
-              ave_exp_v_u_fixed_lwr = quantile(ave_exps, 0.025),
-              ave_exp_v_u_fixed_deriv = median(ave_exps_deriv),
-              ave_exp_v_u_fixed_deriv_upr = quantile(ave_exps_deriv, 0.975),
-              ave_exp_v_u_fixed_deriv_lwr = quantile(ave_exps_deriv, 0.025),
+    summarise(ave_exp_v_u_fixed_med = median(ave_exps_v_u_fixed),
+              ave_exp_v_u_fixed_upr = quantile(ave_exps_v_u_fixed, 0.975),
+              ave_exp_v_u_fixed_lwr = quantile(ave_exps_v_u_fixed, 0.025),
+              ave_exp_v_u_fixed_deriv_med = median(ave_exps_v_u_fixed_deriv),
+              ave_exp_v_u_fixed_deriv_upr = quantile(ave_exps_v_u_fixed_deriv, 0.975),
+              ave_exp_v_u_fixed_deriv_lwr = quantile(ave_exps_v_u_fixed_deriv, 0.025),
+              ave_exp_v_fixed_med = median(ave_exps_v_fixed),
+              ave_exp_v_fixed_upr = quantile(ave_exps_v_fixed, 0.975),
+              ave_exp_v_fixed_lwr = quantile(ave_exps_v_fixed, 0.025),
+              ave_exp_v_fixed_deriv_med = median(ave_exps_v_fixed_deriv),
+              ave_exp_v_fixed_deriv_upr = quantile(ave_exps_v_fixed_deriv, 0.975),
+              ave_exp_v_fixed_deriv_lwr = quantile(ave_exps_v_fixed_deriv, 0.025),
               inst_repro_med = median(inst_repro),
               inst_repro_upr = quantile(inst_repro, 0.975),
               inst_repro_lwr = quantile(inst_repro, 0.025),
               prod_inst_repro_med = median(cum_inst_repro),
               prod_inst_repro_upr = quantile(cum_inst_repro, 0.975),
-              prod_inst_repro_lwr = quantile(cum_inst_repro, 0.025),
-              post_prob_ave_exp_v_u_fixed_deriv = length(which(ave_exps_deriv>0))/length(ave_exps_deriv))}else{tmp = NULL}
+              prod_inst_repro_lwr = quantile(cum_inst_repro, 0.025))}else{tmp = NULL}
   
   if (2 %in% id_group){
     tmp2<- output_postsamps  %>% 

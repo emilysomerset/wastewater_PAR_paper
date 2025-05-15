@@ -194,6 +194,7 @@ process_results <- function(df_full, tmbdat, samps1, polyOrder, AR = FALSE,versi
   
   v <- v[,-1] 
   v_full <- v_full[,-1] 
+  v_fixed <- v_full +  Xfstat_full%*%Xf_samps1
   
   if (AR == TRUE){
   v_u <- v_full + u_samps1;
@@ -204,6 +205,11 @@ process_results <- function(df_full, tmbdat, samps1, polyOrder, AR = FALSE,versi
   
   v <- v %>% 
     melt(id.vars = c("sample_date"))
+  
+  v_fixed <- v_fixed %>% 
+    mutate(sample_date = df_full$sample_date, 
+           site_id = df_full$site_id) %>% 
+    melt(id.vars = c("sample_date", "site_id"))
   
   if (AR == TRUE){
     v_u <- v_u %>% 
@@ -218,5 +224,5 @@ process_results <- function(df_full, tmbdat, samps1, polyOrder, AR = FALSE,versi
   } else {v_u = NULL; v_u_fixed = NULL}
   
   
-  return(list(v = v, v_u = v_u, v_u_fixed = v_u_fixed))
+  return(list(v = v, v_fixed=v_fixed, v_u = v_u, v_u_fixed = v_u_fixed))
 }

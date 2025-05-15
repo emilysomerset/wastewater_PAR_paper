@@ -35,7 +35,7 @@ tmp <- tmp %>%
 
 if (AR == TRUE){
   
-tmp_ar <- lapply(list(results$v_u, results$v_u_fixed), 
+tmp_ar <- lapply(list(results$v_u, results$v_u_fixed,results$v_fixed), 
        function(x){
          tmp2 <- x %>%
            mutate(value = exp(value)) %>%
@@ -111,6 +111,11 @@ if (AR == TRUE){
     left_join(tmp_ar[[2]] %>% dplyr::select(sample_date, ratio_value, variable) %>% 
                 rename(ratio_v_u_fixed = ratio_value), 
               by = c( "earliest_week_end_date"="sample_date","variable"))
+  
+  analysis_d <- analysis_d %>% 
+    left_join(tmp_ar[[3]] %>% dplyr::select(sample_date, ratio_value, variable) %>% 
+                rename(ratio_v_fixed = ratio_value), 
+              by = c( "earliest_week_end_date"="sample_date","variable"))
 }
 
 # if (weight_ratio == TRUE){
@@ -140,6 +145,11 @@ if (AR == TRUE){
     left_join(tmp_ar[[2]] %>% dplyr::select(sample_date, ratio_value, variable) %>% 
                 rename(ratio_v_u_fixed = ratio_value), 
               by = c( "earliest_week_end_date"="sample_date","variable"))
+  
+  analysis_d2 <- analysis_d2 %>% 
+    left_join(tmp_ar[[3]] %>% dplyr::select(sample_date, ratio_value, variable) %>% 
+                rename(ratio_v_fixed = ratio_value), 
+              by = c( "earliest_week_end_date"="sample_date","variable"))
 }
 
 # if (weight_ratio == TRUE){
@@ -157,6 +167,7 @@ tmbdat <- lapply(analysis_d, function(dat){
     ratio = dat$ratio,
     ratio_v_u = dat$ratio_v_u, #will sometimes be null
     ratio_v_u_fixed = dat$ratio_v_u_fixed, #will sometimes be null
+    ratio_v_fixed = dat$ratio_v_fixed, #will sometimes be null
     # ratio_v_u_weighted = dat$ratio_v_u_weighted, #will sometimes be null
     obs_start_case = dat$Y0[1]
   )

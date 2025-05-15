@@ -301,6 +301,42 @@ ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ.pdf"),
 rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ.pdf"))
 
 
+a = gg1+ theme(axis.title.y = element_blank(),
+               axis.text.x.top = element_text(vjust = -78))
+ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_a.pdf"),
+       plot = a, 
+       device = "pdf",
+       width = 8/2, 
+       height = 8/3,
+       dpi = 300)
+rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ_a.pdf"))
+
+b = gg3+ theme(axis.title.y = element_blank(),
+               axis.text.x.top = element_text(vjust = -78))
+ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_b.pdf"),
+       plot = b, 
+       device = "pdf",
+       width = 8/2, 
+       height = 8/3,
+       dpi = 300)
+
+c = gg2+ theme(axis.title.y = element_blank(),
+               axis.text.x.top = element_text(vjust = -78))
+ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_c.pdf"),
+       plot = c, 
+       device = "pdf",
+       width = 8/2, 
+       height = 8/3,
+       dpi = 300)
+
+d = gg4+ theme(axis.title.y = element_blank(),
+               axis.text.x.top = element_text(vjust = -78))
+ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_d.pdf"),
+       plot = d, 
+       device = "pdf",
+       width = 8/2, 
+       height = 8/3,
+       dpi = 300)
 
 
 
