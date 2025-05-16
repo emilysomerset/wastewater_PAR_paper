@@ -223,7 +223,8 @@ gg1 <- results$df_full %>%
                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
                                      years}))+
   theme(axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -163))
+        axis.text.x.top = element_text(vjust = -163),
+        axis.title.y = element_blank())
 
 
 
