@@ -150,6 +150,22 @@ gg2 = ggplot(results, aes(earliest_week_end_date, z_med))+
         axis.ticks.x.top = element_blank())
 
 
+ggplot(results, aes(earliest_week_end_date, z_med))+
+  geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
+  geom_line()+
+  geom_line(aes(earliest_week_end_date, y), col = "red")+
+  theme_bw()+ 
+  scale_y_continuous(name = expression(I[j]), 
+                     labels = scales::label_comma(),
+                     breaks = scales::pretty_breaks(n=10))+
+  scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
+               sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
+  theme(axis.title.y = element_text(size = 12),
+        axis.text.x.top = element_text(vjust = -66),
+        axis.ticks.x.top = element_blank())
+
+
+
 
 ### Ascertainment probability
 gg3 = ggplot(results ,  aes(earliest_week_end_date, p_med))+
