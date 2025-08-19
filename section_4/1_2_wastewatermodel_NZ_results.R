@@ -68,7 +68,7 @@ gg1 <- results$station_ave_df %>%
   # geom_line(data=results$df_full, aes(x= sample_date, exp_v), col = "red")+
   geom_ribbon(aes(ymax = ave_exp_v_fixed_upr, ymin = ave_exp_v_fixed_lwr), alpha = 0.4, size = 0.2, fill = "black") +
   theme_bw()+
-  scale_y_continuous(name = expression(paste(bar(mu),"(t)")), breaks = scales::pretty_breaks(n=5),
+  scale_y_continuous(name = expression(paste(bar(V),"(t)")), breaks = scales::pretty_breaks(n=5),
                      limits = c(0,150000))+ 
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
@@ -85,7 +85,7 @@ gg2 <- results$df_full %>%
   geom_line(aes(y = inst_repro),size=0.2) + 
   geom_ribbon(aes(ymax = inst_repro_upr, ymin = inst_repro_lwr), alpha = 0.4, size = 0.2, fill = "black") +
   theme_bw()+
-  scale_y_continuous(name = expression(paste("exp[", bar(mu),"'(t)/",bar(mu),"(t)]")), breaks = scales::pretty_breaks(n=5), limits = c(0.8,1.5))+ 
+  scale_y_continuous(name = expression(paste("exp[", bar(V),"'(t)]")), breaks = scales::pretty_breaks(n=5), limits = c(0.8,1.5))+ 
   # geom_hline(yintercept=0, lty="dashed")+
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
@@ -139,18 +139,16 @@ ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel.pdf"),
 
 rstudioapi::viewer(paste0("./section_4/plots/allsignals_NZ_wastewatermodel.pdf"))
 
-a = gg1+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+a = gg1+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_a.pdf"),
        plot = a, 
        device = "pdf",
        width = 8/2, 
        height = 8/3,
        dpi = 300)
-rstudioapi::viewer(paste0("./section_4/plots/allsignals_NZ_wastewatermodel_a.pdf"))
+# rstudioapi::viewer(paste0("./section_4/plots/allsignals_NZ_wastewatermodel_a.pdf"))
 
-b = gg3+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+b = gg3+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_b.pdf"),
        plot = b, 
        device = "pdf",
@@ -158,8 +156,7 @@ ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_b.pdf"
        height = 8/3,
        dpi = 300)
 
-c = gg2+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+c = gg2+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_c.pdf"),
        plot = c, 
        device = "pdf",
@@ -167,8 +164,7 @@ ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_c.pdf"
        height = 8/3,
        dpi = 300)
 
-d = gg4+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+d = gg4+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/allsignals_NZ_wastewatermodel_d.pdf"),
        plot = d, 
        device = "pdf",
@@ -209,7 +205,7 @@ gg1 <- results$df_full %>%
   #                    trans="log",
   #                    labels = function(x)format(x,digits=2),
   #                    breaks = c(0.14,1,8,50,400,3000))+ 
-  scale_y_continuous(name = '', 
+  scale_y_continuous(name = expression(paste(mu[i],"(t)")), 
                      trans="log",
                      labels = function(x)format(x,digits=2,big.mark = ","),
                      breaks = exp(dd(log(c(results$df_full$exp_v_u_fixed_lwr,results$df_full$exp_v_u_fixed_upr)),8)))+
@@ -223,8 +219,7 @@ gg1 <- results$df_full %>%
                                      years[duplicated(years)] <- ""  # Remove duplicate year labels
                                      years}))+
   theme(axis.ticks.x.top = element_blank(),
-        axis.text.x.top = element_text(vjust = -163),
-        axis.title.y = element_blank())
+        axis.text.x.top = element_text(vjust = -163))
 
 
 

@@ -220,8 +220,7 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto.pdf"),
 
 rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto.pdf"))
 
-a = gg1+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+a = gg1+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_a.pdf"),
        plot = a, 
        device = "pdf",
@@ -230,8 +229,7 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_a.pdf"),
        dpi = 300)
 rstudioapi::viewer(paste0("./section_3/plots/epidemic_model_toronto_a.pdf"))
 
-b = gg3+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+b = gg3+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_b.pdf"),
        plot = b, 
        device = "pdf",
@@ -239,8 +237,7 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_b.pdf"),
        height = 8/3,
        dpi = 300)
 
-c = gg2+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+c = gg2+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_c.pdf"),
        plot = c, 
        device = "pdf",
@@ -248,8 +245,7 @@ ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_c.pdf"),
        height = 8/3,
        dpi = 300)
 
-d = gg4+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+d = gg4+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/epidemic_model_toronto_d.pdf"),
        plot = d, 
        device = "pdf",
@@ -305,7 +301,7 @@ gg2 = results_pred %>%
                 show.legend = FALSE,
                 linewidth = 0.2)+
   geom_point(size = 1,shape = 17, col = "red", fill = "red")+
-  scale_y_continuous(name = expression("Confirmed COVID-19 case counts"), 
+  scale_y_continuous(name = expression("COVID-19 case counts"), 
                      trans="log10",
                      labels = function(x)format(x,digits=2,big.mark = ","),
                      breaks = round_custom(10^(dd(log10(results_pred$pred_y_med),8))))+

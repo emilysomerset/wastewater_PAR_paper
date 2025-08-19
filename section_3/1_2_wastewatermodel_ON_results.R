@@ -38,7 +38,7 @@ gg1 <- results$station_ave_df %>%
   # geom_line(data=results$df_full, aes(x= sample_date, exp_v), col = "red")+
   geom_ribbon(aes(ymax = ave_exp_v_fixed_upr, ymin = ave_exp_v_fixed_lwr), alpha = 0.4, size = 0.2, fill = "black") +
   theme_bw()+
-  scale_y_continuous(name = expression(paste(bar(mu),"(t)")), breaks = scales::pretty_breaks(n=5), limits = c(0,565))+ 
+  scale_y_continuous(name = expression(paste(bar(V),"(t)")), breaks = scales::pretty_breaks(n=5), limits = c(0,565))+ 
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
   theme(axis.title.y = element_text(size = 14),
@@ -54,7 +54,7 @@ gg2 <- results$df_full %>%
   geom_line(aes(y = inst_repro),size=0.2) + 
   geom_ribbon(aes(ymax = inst_repro_upr, ymin = inst_repro_lwr), alpha = 0.4, size = 0.2, fill = "black") +
   theme_bw()+
-  scale_y_continuous(name = expression(paste("exp[", bar(mu),"'(t)/",bar(mu),"(t)]")), breaks = scales::pretty_breaks(n=5), limits = c(0.7,1.3))+ 
+  scale_y_continuous(name = expression(paste("exp[", bar(V),"'(t)]")), breaks = scales::pretty_breaks(n=5), limits = c(0.7,1.3))+ 
   # geom_hline(yintercept=0, lty="dashed")+
   scale_x_date(breaks=scales::pretty_breaks(n=10), name = "",date_labels ="%b",
                sec.axis = sec_axis(name = "",trans = ~ .,labels = function(x) year(x)))+
@@ -109,8 +109,7 @@ rstudioapi::viewer(paste0("./section_3/plots/allsignals_ON_wastewatermodel.pdf")
 
 
 
-a = gg1+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+a = gg1+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_a.pdf"),
        plot = a, 
        device = "pdf",
@@ -119,8 +118,7 @@ ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_a.pdf"
        dpi = 300)
 rstudioapi::viewer(paste0("./section_3/plots/allsignals_ON_wastewatermodel_a.pdf"))
 
-b = gg3+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+b = gg3+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_b.pdf"),
        plot = b, 
        device = "pdf",
@@ -128,8 +126,7 @@ ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_b.pdf"
        height = 8/3,
        dpi = 300)
 
-c = gg2+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+c = gg2+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_c.pdf"),
        plot = c, 
        device = "pdf",
@@ -137,8 +134,7 @@ ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_c.pdf"
        height = 8/3,
        dpi = 300)
 
-d = gg4+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+d = gg4+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_3/plots/allsignals_ON_wastewatermodel_d.pdf"),
        plot = d, 
        device = "pdf",

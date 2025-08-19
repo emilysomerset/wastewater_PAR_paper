@@ -220,7 +220,7 @@ gg2=ggplot(results , aes(earliest_week_end_date, z_cumsum_noadj_med))+
 gg3 = ggplot(results, aes(earliest_week_end_date, z_med))+
   geom_line()+
   # geom_point()+
-  geom_point(aes(earliest_week_end_date, y), size = 0.2)+
+  geom_line(aes(earliest_week_end_date, y), linetype = "dashed")+
   # geom_point(aes(earliest_week_end_date, y), col = "red")+
   geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
   theme_bw()+ 
@@ -301,18 +301,16 @@ ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ.pdf"),
 rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ.pdf"))
 
 
-a = gg1+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+a = gg1+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_a.pdf"),
        plot = a, 
        device = "pdf",
        width = 8/2, 
        height = 8/3,
        dpi = 300)
-rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ_a.pdf"))
+# rstudioapi::viewer(paste0("./section_4/plots/epidemic_model_NZ_a.pdf"))
 
-b = gg3+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+b = gg3+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_b.pdf"),
        plot = b, 
        device = "pdf",
@@ -320,8 +318,7 @@ ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_b.pdf"),
        height = 8/3,
        dpi = 300)
 
-c = gg2+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+c = gg2+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_c.pdf"),
        plot = c, 
        device = "pdf",
@@ -329,8 +326,7 @@ ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_c.pdf"),
        height = 8/3,
        dpi = 300)
 
-d = gg4+ theme(axis.title.y = element_blank(),
-               axis.text.x.top = element_text(vjust = -78))
+d = gg4+ theme(axis.text.x.top = element_text(vjust = -78))
 ggsave(filename = paste0("./section_4/plots/epidemic_model_NZ_d.pdf"),
        plot = d, 
        device = "pdf",
