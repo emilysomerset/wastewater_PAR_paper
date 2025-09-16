@@ -47,7 +47,7 @@ smooth_var_prior <- data.frame(SD = seq(0, 3/400,0.0001)) %>%
 
 posterior_sigma_s <- smooth_var_prior %>% 
   ggplot(aes(x = c*SD, y = prior/c)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   ylab("Density") + 
   scale_x_continuous(name = "",limits = c(0,2), breaks=scales::pretty_breaks(n=6) )+
@@ -82,7 +82,7 @@ smooth_var_prior <- rbind(smooth_var_prior,
 
 
 posterior_sigma_z <- smooth_var_prior %>% ggplot(aes(x = SD, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = SD, y = density), linetype="solid", data = smooth_var) +
   ylab("Density") +
@@ -113,7 +113,7 @@ smooth_var_prior <- data.frame(SD = seq(0, 5,0.01)) %>%
 
 
 posterior_cov <- smooth_var_prior %>% ggplot(aes(x = SD, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = SD, y = density), linetype="solid", data = smooth_var) +
   ylab("Density") +
@@ -138,7 +138,7 @@ drange = density(range_posterior_samps, adjust = 2.5)
 
 
 posterior_range <- smooth_var %>% ggplot(aes(x = tau, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = drange$x, y = drange$y)) +
   ylab("Density")  + theme(legend.position = "none")+
@@ -162,7 +162,7 @@ drange = density(range_posterior_samps, adjust = 2.5)
 
 
 posterior_tau <- smooth_var %>% ggplot(aes(x = tau, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = drange$x, y = drange$y)) +
   ylab("Density") +
@@ -195,7 +195,7 @@ smooth_var <- data.frame(sigma = seq(0, 5, 0.01)) %>%
 
 
 posterior_sigma_pi = smooth_var %>% ggplot(aes(x = sigma, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = dsigma$x, y = dsigma$y)) +
   ylab("Density") +

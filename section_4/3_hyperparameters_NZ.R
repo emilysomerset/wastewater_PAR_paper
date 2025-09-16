@@ -1,3 +1,17 @@
+# R version 4.4.2 (2024-10-31)
+# Platform: x86_64-pc-linux-gnu
+# Running under: Ubuntu 22.04.5 LTS
+
+library(dplyr) # dplyr_1.1.4
+library(TMB) # TMB_1.9.16
+library(aghq) # aghq_0.4.1
+library(magrittr) # magrittr_2.0.3
+library(reshape2) # reshape2_1.4.4
+library(gridExtra) # gridExtra_2.3
+library(cowplot) # cowplot_1.1.3
+library(readr) #readr_2.1.5
+library(ggplot2) #ggplot2_3.5.1
+library(lubridate) #lubridate_1.9.4
 ###############################################
 # Posteriors and prior plots
 load("./section_4/wastewater_model_newzealand_censored_comp_fullAR.RData")
@@ -34,7 +48,7 @@ smooth_var_prior <- data.frame(SD = seq(0,4/400,0.0001)) %>%
 
 posterior_sigma_s <- smooth_var_prior %>% 
   ggplot(aes(x = c*SD, y = prior/c)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   ylab("Density") + 
   scale_x_continuous(name = "",limits = c(0,4), breaks=scales::pretty_breaks(n=6) )+
@@ -69,7 +83,7 @@ smooth_var_prior <- rbind(smooth_var_prior,
 
 
 posterior_sigma_z <- smooth_var_prior %>% ggplot(aes(x = SD, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = SD, y = density), linetype="solid", data = smooth_var) +
   ylab("Density") +
@@ -100,7 +114,7 @@ smooth_var_prior <- data.frame(SD = seq(0, 5,0.01)) %>%
 
 
 posterior_cov <- smooth_var_prior %>% ggplot(aes(x = SD, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = SD, y = density), linetype="solid", data = smooth_var) +
   ylab("Density") +
@@ -125,7 +139,7 @@ drange = density(range_posterior_samps, adjust = 2.5)
 
 
 posterior_range <- smooth_var %>% ggplot(aes(x = tau, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = drange$x, y = drange$y)) +
   ylab("Density")  + theme(legend.position = "none")+
@@ -149,7 +163,7 @@ drange = density(range_posterior_samps, adjust = 2.5)
 
 
 posterior_tau <- smooth_var %>% ggplot(aes(x = tau, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey", alpha = 1) +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = drange$x, y = drange$y)) +
   ylab("Density") +
@@ -181,7 +195,7 @@ smooth_var <- data.frame(sigma = seq(0, 5, 0.01)) %>%
 
 
 posterior_sigma_pi = smooth_var %>% ggplot(aes(x = sigma, y = prior)) + 
-  geom_area(fill = "orange", alpha = 0.2) +
+  geom_area(fill = "grey") +
   theme_classic(base_size = 15) +
   geom_line(aes(x = x, y = y), linetype="solid", data = data.frame(x = dsigma$x, y = dsigma$y)) +
   ylab("Density") +

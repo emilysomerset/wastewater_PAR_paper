@@ -161,7 +161,7 @@ gg1 = tmp %>%
   geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.3)+  
   geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med))+  
   # geom_point(col="red")+
-  geom_line(col ="red", size = 0.5)+
+  geom_line(col ="black", size = 0.5,linetype = "dashed")+
   theme_bw()+ 
   scale_y_continuous(name = expression(R[j]),
                      breaks = scales::pretty_breaks(n=10))+

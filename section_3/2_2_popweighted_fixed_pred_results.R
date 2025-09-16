@@ -107,7 +107,7 @@ gg1 = tmp %>%
   geom_ribbon(aes(earliest_week_end_date,ymax = ratio_v_u_fixed_upr, ymin = ratio_v_u_fixed_lwr), alpha = 0.3)+  
   geom_line(aes(earliest_week_end_date,ratio_v_u_fixed_med))+  
   # geom_point(col="red")+
-  geom_line(col ="red", size = 0.5)+
+  geom_line(col ="black", size = 0.5,linetype = "dashed")+
   theme_bw()+ 
   scale_y_continuous(name = expression(R[j]),
                      breaks = scales::pretty_breaks(n=10))+
@@ -137,7 +137,7 @@ round_custom <- function(x) {
 gg2 = ggplot(results, aes(earliest_week_end_date, z_med))+
   geom_ribbon(aes(ymin = z_lwr, ymax = z_upr), alpha = 0.3)+
   geom_line()+
-  geom_line(aes(earliest_week_end_date, y), col = "red")+
+  geom_line(aes(earliest_week_end_date, y), col = "black", linetype = "dashed")+
   theme_bw()+ 
   scale_y_continuous(name = expression(I[j]), 
                      trans="log10",
@@ -179,7 +179,7 @@ gg3 = ggplot(results ,  aes(earliest_week_end_date, p_med))+
   theme(axis.title.y = element_text(size = 14),
         axis.text.x.top = element_text(vjust = -66),
         axis.ticks.x.top = element_blank())+
-  geom_line(aes(earliest_week_end_date,total_number_of_tests/max(total_number_of_tests)),col = "red")
+  geom_line(aes(earliest_week_end_date,total_number_of_tests/max(total_number_of_tests)),col = "black", linetype="dashed")
 
 df2 = data.frame(earliest_week_end_date=ymd("2021-03-01"),
            lwr = 3.74,
@@ -196,7 +196,9 @@ gg4 = ggplot(results %>% filter(earliest_week_end_date<"2021-12-01"), aes(earlie
   geom_segment(data = df2, aes(x = ymd("2021-02-01"), xend = ymd("2021-03-31"), y = upr)) +  
   geom_point(data = data.frame(earliest_week_end_date=ymd("2021-03-01"),y= 5.38 ),
              aes(earliest_week_end_date, y),size= 0.5)+
-  geom_line(aes(earliest_week_end_date, number_of_cases_cumsum_delta/pop*100), col = "red")+
+  geom_line(aes(earliest_week_end_date, number_of_cases_cumsum_delta/pop*100), 
+            col = "black",
+            linetype = "dashed")+
   scale_x_date(breaks=scales::pretty_breaks(n=8), name = "")+
   theme(axis.title.y = element_text(size = 12),
         axis.ticks.x.top = element_blank())
@@ -300,7 +302,7 @@ gg2 = results_pred %>%
   geom_errorbar(aes(earliest_week_end_date, ymin = pred_y_95_lwr, ymax = pred_y_95_upr), 
                 show.legend = FALSE,
                 linewidth = 0.2)+
-  geom_point(size = 1,shape = 17, col = "red", fill = "red")+
+  geom_point(size = 1,shape = 17, col = "black", fill = "black")+
   scale_y_continuous(name = expression("COVID-19 case counts"), 
                      trans="log10",
                      labels = function(x)format(x,digits=2,big.mark = ","),
